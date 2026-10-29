@@ -154,7 +154,7 @@ class Browser(QMainWindow):
         super().__init__()
         self.config = config
         self.profiles: dict[str, QWebEngineProfile] = {}
-        self.setWindowTitle("DevSeaTech Browser — Development Preview")
+        self.setWindowTitle("DevSeaTech Universe — Development Preview")
         self.resize(1220, 790)
         self.tabs = QTabWidget()
         self.tabs.setTabsClosable(True)
