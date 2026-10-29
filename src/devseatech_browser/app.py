@@ -13,7 +13,7 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from PySide6.QtCore import QTimer, QUrl, Qt
+from PySide6.QtCore import QTimer, QUrl, Qt, QLocale
 from PySide6.QtWidgets import (
     QApplication, QDialog, QFormLayout, QHBoxLayout, QInputDialog,
     QLineEdit, QMainWindow, QMessageBox, QPushButton, QTabWidget,
@@ -47,6 +47,15 @@ def create_record(password: str) -> dict:
     return {"salt": salt.hex(), "hash": derive_password(password, salt)}
 
 
+def save_config(config: dict) -> None:
+    APP_DIR.mkdir(parents=True, exist_ok=True)
+    temp = AUTH_PATH.with_suffix('.tmp')
+    with temp.open('w', encoding='utf-8') as handle:
+        json.dump(config, handle)
+    os.chmod(temp, 0o600)
+    temp.replace(AUTH_PATH)
+
+
 def write_auth(master: str, admin: str) -> None:
     APP_DIR.mkdir(parents=True, exist_ok=True)
     config = {
@@ -54,11 +63,7 @@ def write_auth(master: str, admin: str) -> None:
         "admin": create_record(admin),
         "session_minutes": DEFAULT_SESSION_MINUTES,
     }
-    temp = AUTH_PATH.with_suffix(".tmp")
-    with temp.open("w", encoding="utf-8") as handle:
-        json.dump(config, handle)
-    os.chmod(temp, 0o600)
-    temp.replace(AUTH_PATH)
+    save_config(config)
 
 
 class CredentialDialog(QDialog):
@@ -145,6 +150,8 @@ class Browser(QMainWindow):
         new_tab.triggered.connect(lambda: self.add_tab("Default"))
         new_profile = toolbar.addAction("New Profile")
         new_profile.triggered.connect(self.create_profile)
+        settings = toolbar.addAction("Session Settings")
+        settings.triggered.connect(self.configure_timer)
         self.tabs.currentChanged.connect(self.update_address)
         self.add_tab("Default")
         minutes = max(1, min(int(config.get("session_minutes", 60)), 1440))
@@ -163,6 +170,7 @@ class Browser(QMainWindow):
         profile.setPersistentStoragePath(str(profile_path / "storage"))
         profile.setCachePath(str(profile_path / "cache"))
         profile.setPersistentCookiesPolicy(QWebEngineProfile.ForcePersistentCookies)
+        profile.setHttpAcceptLanguage("en-US,en;q=0.9")
         self.profiles[name] = profile
         return profile
 
@@ -219,6 +227,23 @@ class Browser(QMainWindow):
                 and verify_password(dialog.values()["Administrator password"],
                                     self.config["admin"]))
 
+    def configure_timer(self):
+        if not self.admin_confirmed():
+            QMessageBox.warning(self, "Denied", "Administrator authorization required.")
+            return
+        current = max(1, min(int(self.config.get("session_minutes", 60)), 1440))
+        minutes, ok = QInputDialog.getInt(
+            self, "Session Settings", "Session duration (minutes):",
+            current, 1, 1440, 1)
+        if not ok:
+            return
+        self.config["session_minutes"] = minutes
+        save_config(self.config)
+        self.statusBar().showMessage(
+            f"Saved: {minutes} minutes per login. Applies on next login.")
+        QMessageBox.information(self, "Saved",
+            "New session duration will apply after the next master login.")
+
     def create_profile(self):
         if not self.admin_confirmed():
             QMessageBox.warning(self, "Denied", "Administrator authorization required.")
@@ -239,6 +264,7 @@ class Browser(QMainWindow):
 
 
 def main():
+    QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
     app = QApplication(sys.argv)
     app.setStyleSheet("""
       QWidget { background: #09162c; color: #e4f7ff; font-size: 13px; }
