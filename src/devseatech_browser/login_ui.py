@@ -129,6 +129,10 @@ class BrandedLoginDialog(QDialog):
         submit = QPushButton("Continue to Browser   →")
         submit.clicked.connect(self.accept)
         panel_layout.addWidget(submit)
+        if title == "Master Login":
+            recovery = QPushButton("Forgot both passwords? Reset this preview")
+            recovery.clicked.connect(lambda: self.done(2))
+            panel_layout.addWidget(recovery)
         panel_layout.addStretch()
         safety = QLabel("Admin Controlled    •    Session Time Control    •    Secure Profiles")
         safety.setAlignment(Qt.AlignCenter)

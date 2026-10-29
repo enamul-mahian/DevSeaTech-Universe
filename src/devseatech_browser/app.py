@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from devseatech_browser.login_ui import BrandedLoginDialog
+from devseatech_browser.recovery import archive_preview_auth
 
 APP_DIR = Path.home() / ".devseatech-browser"
 AUTH_PATH = APP_DIR / "auth.json"
@@ -116,7 +117,31 @@ def setup_or_login() -> dict | None:
         return None
     for _ in range(3):
         dialog = BrandedLoginDialog("Master Login", [("Master password", True)])
-        if dialog.exec() != QDialog.Accepted:
+        result = dialog.exec()
+        if result == 2:
+            choice = QMessageBox.warning(
+                None, "Reset Development Preview Login",
+                "This is an unverified local preview reset, NOT production recovery.\n"
+                "Proceed only as the owner of this operating-system account.\n"
+                "Authentication settings will be archived; profiles will be preserved.\n"
+                "Existing website sessions or encrypted data may become inaccessible.",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if choice != QMessageBox.Yes:
+                return None
+            phrase, confirmed = QInputDialog.getText(
+                None, "Confirm Preview Reset", "Type RESET DEVELOPMENT PREVIEW LOGIN:")
+            if not confirmed:
+                return None
+            try:
+                archive_preview_auth(APP_DIR, phrase)
+            except (OSError, ValueError) as exc:
+                QMessageBox.critical(None, "Recovery failed", str(exc))
+                return None
+            QMessageBox.information(
+                None, "Preview Reset",
+                "Previous login configuration archived. Restart the browser to set new passwords.")
+            return None
+        if result != QDialog.Accepted:
             return None
         if verify_password(dialog.values()["Master password"], config["master"]):
             return config
