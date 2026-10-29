@@ -15,9 +15,9 @@ Status: Approved feature direction. **Design and security review only; no produc
 - User-facing messages, admin dashboard, source code, and documentation remain English only.
 - Android remains on hold; no AI assistant.
 
-## Provisional time semantics (requires product sign-off)
+## Confirmed license duration
 
-Define one month as one **calendar month** from server-confirmed activation time, in UTC. Example: January 15 10:00 UTC to February 15 10:00 UTC. For a day absent in the next month, clamp to the final day of the next month. Do not implement this definition until confirmed. Renewal timing, grace period, refund policy and offline activation limits remain open decisions.
+**Confirmed:** Exactly 30 consecutive days (720 hours) from server-confirmed activation time, measured in UTC; not calendar-month based. Renewal timing, grace period, refund policy and offline activation limits remain open decisions.
 
 ## Server-authoritative license lifecycle
 
@@ -68,7 +68,7 @@ Provide admin actions: Issue, Activate, Renew, Release Binding, Reissue, Revoke,
 
 ## Implementation gate
 
-Before implementation: confirm the exact month-duration calculation, renewal and offline grace semantics, admin recovery rules, and IP/MAC retention period. Verify availability and behavior of hardware-backed device keys across targeted Windows and Linux editions.
+Before implementation: renewal and offline grace semantics, admin recovery rules, and IP/MAC retention period. Verify availability and behavior of hardware-backed device keys across targeted Windows and Linux editions.
 
 ## References
 - https://learn.microsoft.com/windows/security/hardware-security/tpm/tpm-fundamentals
