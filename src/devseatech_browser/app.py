@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
+from devseatech_browser.login_ui import BrandedLoginDialog
 
 APP_DIR = Path.home() / ".devseatech-browser"
 AUTH_PATH = APP_DIR / "auth.json"
@@ -96,7 +97,7 @@ class CredentialDialog(QDialog):
 
 def setup_or_login() -> dict | None:
     if not AUTH_PATH.exists():
-        dialog = CredentialDialog("First-Time Setup", [
+        dialog = BrandedLoginDialog("First-Time Setup", [
             ("Master password", True), ("Admin password", True),
         ])
         if dialog.exec() != QDialog.Accepted:
@@ -114,7 +115,7 @@ def setup_or_login() -> dict | None:
         QMessageBox.critical(None, "Error", "Authentication settings are unreadable.")
         return None
     for _ in range(3):
-        dialog = CredentialDialog("Master Login", [("Master password", True)])
+        dialog = BrandedLoginDialog("Master Login", [("Master password", True)])
         if dialog.exec() != QDialog.Accepted:
             return None
         if verify_password(dialog.values()["Master password"], config["master"]):
