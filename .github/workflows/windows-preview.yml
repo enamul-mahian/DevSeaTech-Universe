@@ -1,0 +1,42 @@
+name: Windows Browser Preview Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [development/windows-build]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  windows-preview:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+      - name: Configure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install desktop dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pyinstaller
+      - name: Compile desktop application
+        run: python -m compileall -q src
+      - name: Build Windows preview
+        run: python -m PyInstaller --noconfirm --clean --windowed --name DevSeaTechBrowserPreview --paths src --collect-all PySide6.QtWebEngineCore --collect-all PySide6.QtWebEngineWidgets src/devseatech_browser/app.py
+      - name: Verify portable executable exists
+        shell: pwsh
+        run: |
+          if (!(Test-Path "dist/DevSeaTechBrowserPreview/DevSeaTechBrowserPreview.exe")) { throw "Windows preview executable missing" }
+      - name: Upload private CI build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DevSeaTechBrowserPreview-Windows-x64
+          path: dist/DevSeaTechBrowserPreview/
+          retention-days: 7
+          if-no-files-found: error
