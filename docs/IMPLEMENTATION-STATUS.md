@@ -26,6 +26,9 @@ runtime check) — never on compilation or packaging alone.
 | AF-06 Secure Password Vault | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/password_vault.py`; 13 tests in `tests/test_password_vault.py`; Fernet+scrypt encrypted storage, per-profile vault, add/remove/list/export, lock/unlock |
 | AF-07 Profile Import/Export/Clone | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/profile_migration.py`; 9 tests in `tests/test_profile_migration.py`; encrypted export/import roundtrip, clone with cache exclusion, path traversal protection |
 | AF-08 Proxy Health Monitor | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/proxy_health.py`; 11 tests in `tests/test_proxy_health.py`; TCP connectivity check, config validation, URL parsing, system proxy detection |
+| AF-09 Resource Manager | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/resource_manager.py`; 13 tests in `tests/test_resource_manager.py`; per-profile CPU/RAM/disk monitoring, policy thresholds, report formatting |
+| AF-10 License Renewal Reminder | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/license_reminder.py`; 11 tests in `tests/test_license_reminder.py`; server-time expiration check, trial/standard thresholds, persistence |
+| AF-11 Profile Templates | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/profile_templates.py`; 13 tests in `tests/test_profile_templates.py`; CRUD, blocked-field stripping, apply to profile, slug naming |
 
 Verified locally this session: full suite **92/92 pass** (`PYTHONPATH=src python -m unittest discover -s tests`), including AF-02 encryption; offscreen GUI smoke exits 0 and constructs a Qt WebEngine window.
 
@@ -46,9 +49,9 @@ Source: `docs/APPROVED-ADDITIONAL-FEATURES.md`. All Spec ✅; implementation per
 | AF-06 | Secure Password Vault | **Impl + Unit** |
 | AF-07 | Profile Import/Export/Clone | **Impl + Unit** |
 | AF-08 | Proxy Health Monitor | **Impl + Unit** |
-| AF-09 | Resource Manager | Spec |
-| AF-10 | License Renewal Reminder | Spec |
-| AF-11 | Profile Templates | Spec |
+| AF-09 | Resource Manager | **Impl + Unit** |
+| AF-10 | License Renewal Reminder | **Impl + Unit** |
+| AF-11 | Profile Templates | **Impl + Unit** |
 | AF-12 | Permission Manager | Spec |
 | AF-13 | Security & Activity Logs | Spec |
 | AF-14 | Browser Diagnostics & Repair | Spec |
