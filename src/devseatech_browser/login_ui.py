@@ -112,96 +112,111 @@ class BrandedLoginDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("DevSeaTech Universe — " + title)
         self.setWindowIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon))
-        self.resize(1280, 790)
-        self.setMinimumSize(1050, 690)
+        self.resize(1240, 760)
+        self.setMinimumSize(980, 640)
         self.inputs = {}
         self.setStyleSheet("QDialog { background: #06142b; }")
         background = GalaxyBackground(self)
         shell = QHBoxLayout(background)
-        shell.setContentsMargins(54, 50, 54, 50)
-        shell.setSpacing(54)
+        shell.setContentsMargins(58, 44, 58, 44)
+        shell.setSpacing(60)
 
+        # Content hierarchy: brand + three benefits on the left, a compact
+        # interactive authentication card on the right. No filler panels.
         left = QVBoxLayout()
-        left.setSpacing(13)
-        left.addWidget(line("∞   DevSeaTech", 34, "#f2f9ff", True))
-        left.addWidget(line("       U N I V E R S E", 17, "#64d7ff", True))
-        left.addWidget(line("SECURE  •  PRIVATE  •  POWERFUL", 12, "#7ecfff"))
-        left.addSpacing(44)
-        left.addWidget(line("Your secure digital workspace", 26, "#ffffff", True))
+        left.setSpacing(12)
+        left.addWidget(line("∞  DevSeaTech", 34, "#f4fbff", True))
+        left.addWidget(line("U N I V E R S E", 15, "#55d9ff", True))
+        left.addSpacing(7)
+        left.addWidget(line("PRIVATE BROWSING  /  YOUR WORKSPACE", 11, "#8ac8e5"))
+        left.addStretch(2)
+        left.addWidget(line("Your workspace.\nYour control.", 36, "#ffffff", True))
+        left.addSpacing(5)
         left.addWidget(line(
-            "Multi-profile browsing with centralized administration "
-            "and flexible licensing.", 15, "#afcce6"
+            "One secure entrance to your browsing profiles, "
+            "sessions and tools.", 16, "#c0d8ed"
         ))
-        left.addSpacing(23)
+        left.addSpacing(28)
         for heading, detail in [
-            ("◈   Secure Browsing", "Protect browsing data and user access"),
-            ("◎   Multi-Profile System", "Isolated cookies, cache and sessions"),
-            ("✧   Engine Management", "Multi-version runtime support: planned"),
-            ("◉   Proxies & Privacy", "HTTP, HTTPS and SOCKS5: planned"),
-            ("◷   Session Time Control", "Administrator-managed sessions"),
+            ("01   Isolated profiles", "Separate sessions, cookies and storage"),
+            ("02   Session control", "Administrator-managed access windows"),
+            ("03   Private by design", "Local-first workspace management"),
         ]:
-            left.addWidget(line(heading, 16, "#e6f9ff", True))
-            left.addWidget(line(detail, 12, "#97b8d7"))
-            left.addSpacing(3)
-        left.addStretch()
-        contact = QFrame()
-        contact.setObjectName("contact")
-        contact.setStyleSheet(
-            "QFrame#contact { background: rgba(3,22,49,185); "
-            "border: 1px solid #3ebdff; border-radius: 18px; }"
-        )
-        contact_layout = QVBoxLayout(contact)
-        contact_layout.setContentsMargins(17, 17, 17, 17)
-        contact_layout.addWidget(line("CONTACT INFORMATION", 12, "#6dd9ff", True))
-        contact_layout.addWidget(line("+8801805839123", 13))
-        contact_layout.addWidget(line("devseatech60@gmail.com", 13))
-        contact_layout.addWidget(line("www.devseatech.com", 13))
-        left.addWidget(contact)
-        shell.addLayout(left, 5)
+            benefit = QFrame()
+            benefit.setObjectName("benefit")
+            benefit.setStyleSheet(
+                "QFrame#benefit { background: rgba(4, 24, 52, 150); "
+                "border-left: 2px solid #39caff; border-radius: 5px; }"
+            )
+            benefit_layout = QVBoxLayout(benefit)
+            benefit_layout.setContentsMargins(18, 12, 12, 12)
+            benefit_layout.setSpacing(5)
+            benefit_layout.addWidget(line(heading, 15, "#e9f8ff", True))
+            benefit_layout.addWidget(line(detail, 12, "#a8c8e4"))
+            left.addWidget(benefit)
+            left.addSpacing(7)
+        left.addStretch(3)
+        left.addWidget(line(
+            "DEVSEATECH   •   devseatech60@gmail.com   •   +8801805839123",
+            11, "#90bddb"
+        ))
+        shell.addLayout(left, 6)
 
+        # Center a fixed-width form instead of stretching controls to fill
+        # the height of the window. This keeps the UI balanced on wide monitors.
+        right_column = QVBoxLayout()
+        right_column.addStretch(1)
         panel = QFrame()
         panel.setObjectName("accessPanel")
+        panel.setMaximumWidth(505)
         panel.setStyleSheet("""
             QFrame#accessPanel {
-                background-color: rgba(3, 17, 42, 227);
-                border: 2px solid #49cfff;
-                border-radius: 28px;
+                background-color: rgba(5, 19, 43, 224);
+                border: 1px solid #43b9e9;
+                border-radius: 22px;
             }
             QLineEdit {
-                color: #ffffff; background: #102b50; padding: 15px;
-                border: 1px solid #31a9db; border-radius: 10px;
+                color: #ffffff; background: #102a4a;
+                padding: 14px; min-height: 27px;
+                border: 1px solid #36789c; border-radius: 9px;
                 font-size: 15px;
             }
-            QLineEdit:focus { border: 2px solid #15c9ff; }
+            QLineEdit:focus { border: 2px solid #46dbff; }
             QPushButton {
-                color: #ffffff; background: #047dd9; border: 1px solid #64e6ff;
-                border-radius: 10px; font-size: 15px; font-weight: 700;
-                padding: 16px;
+                color: #ffffff; background: #0879d2;
+                border: 1px solid #36baf5;
+                border-radius: 9px; font-size: 15px; font-weight: 700;
+                padding: 14px;
             }
-            QPushButton:hover { background: #05a7f7; }
-            QPushButton:focus { border: 2px solid #d4faff; }
+            QPushButton:hover { background: #069ce6; }
+            QPushButton:focus { border: 2px solid #c9f5ff; }
+            QPushButton#passwordVisibility {
+                background: #10365b; padding: 14px 12px;
+            }
             QPushButton#recovery {
-                background: transparent; color: #76d9ff;
-                font-size: 12px; border: none; padding: 8px;
+                background: transparent; color: #7ad9ff;
+                font-size: 12px; font-weight: 400;
+                border: none; padding: 7px;
             }
         """)
         right = QVBoxLayout(panel)
-        right.setContentsMargins(52, 47, 52, 36)
-        right.setSpacing(17)
-        heading = line("WELCOME TO", 13, "#7ed7ff", True)
-        heading.setAlignment(Qt.AlignCenter)
-        right.addWidget(heading)
-        brand = line("DevSeaTech Universe", 32, "#ffffff", True)
-        brand.setAlignment(Qt.AlignCenter)
-        right.addWidget(brand)
-        caption = line("SECURE BROWSER ACCESS", 12, "#b8d7ef")
-        caption.setAlignment(Qt.AlignCenter)
-        right.addWidget(caption)
-        right.addSpacing(48)
-
+        right.setContentsMargins(35, 34, 35, 29)
+        right.setSpacing(13)
+        eyebrow = line("ACCOUNT ACCESS", 11, "#64dfff", True)
+        right.addWidget(eyebrow)
+        right.addWidget(line(
+            "Welcome back" if title == "Master Login" else title,
+            30, "#ffffff", True
+        ))
+        right.addWidget(line(
+            "Enter your master credentials to continue."
+            if title == "Master Login"
+            else "Securely configure your local credentials.",
+            13, "#acc7df"
+        ))
+        right.addSpacing(22)
         for label, secret in fields:
-            field_label = line(label.upper(), 12, "#a8c8e6", True)
-            right.addWidget(field_label)
+            right.addWidget(line(label.upper(), 11, "#b6d7ec", True))
             editor = QLineEdit()
             editor.setPlaceholderText("Enter " + label.lower())
             editor.returnPressed.connect(self.accept)
@@ -223,28 +238,27 @@ class BrandedLoginDialog(QDialog):
                 right.addLayout(field_row)
             else:
                 right.addWidget(editor)
-        right.addSpacing(13)
+        right.addSpacing(19)
         submit = QPushButton(
-            "Create Credentials" if title == "First-Time Setup" else "Login to Universe   →"
+            "Create Credentials" if title == "First-Time Setup"
+            else "Unlock Universe  →"
         )
+        submit.setObjectName("loginSubmit")
+        submit.setMinimumHeight(54)
         submit.clicked.connect(self.accept)
         right.addWidget(submit)
         if title == "Master Login":
-            recovery = QPushButton("Forgot both passwords?  Reset preview access")
+            recovery = QPushButton("Reset development-preview access")
             recovery.setObjectName("recovery")
             recovery.clicked.connect(lambda: self.done(2))
             right.addWidget(recovery)
-        right.addSpacing(37)
-        right.addWidget(line("TRIAL LICENSING  •  24h / 72h / custom hours", 12, "#8ebee1"))
+        right.addSpacing(14)
         right.addWidget(line(
-            "License activation and server recovery will appear after "
-            "their secure services are implemented.", 12, "#7192b5"
+            "LOCAL ACCESS  •  ADMIN-PROTECTED SETTINGS", 10, "#759cb8"
         ))
-        right.addStretch()
-        footer = line("Admin Controlled  •  Session Control  •  Profile Isolation", 11, "#80b3df")
-        footer.setAlignment(Qt.AlignCenter)
-        right.addWidget(footer)
-        shell.addWidget(panel, 6)
+        right_column.addWidget(panel, 0, Qt.AlignHCenter)
+        right_column.addStretch(1)
+        shell.addLayout(right_column, 5)
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
