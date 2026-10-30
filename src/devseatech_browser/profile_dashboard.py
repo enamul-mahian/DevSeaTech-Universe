@@ -6,12 +6,13 @@ tab API. No profile or credential files are modified by the dashboard.
 from __future__ import annotations
 
 from pathlib import Path
+from devseatech_browser.profile_restore import restore_as_new_profile
 from devseatech_browser.profile_listing import list_profiles
 from devseatech_browser.backup import create_backup
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QDialog, QHBoxLayout, QLabel, QInputDialog, QLineEdit, QMessageBox, QPushButton, QTableWidget,
+    QDialog, QFileDialog, QHBoxLayout, QLabel, QInputDialog, QLineEdit, QMessageBox, QPushButton, QTableWidget,
     QTableWidgetItem, QVBoxLayout,
 )
 
@@ -72,6 +73,9 @@ class ProfileDashboard(QDialog):
         backup_button = QPushButton("Encrypted Backup")
         backup_button.clicked.connect(self.backup_selected)
         buttons.addWidget(backup_button)
+        restore_button = QPushButton("Restore as New Profile")
+        restore_button.clicked.connect(self.restore_new_profile)
+        buttons.addWidget(restore_button)
         buttons.addStretch()
         self.open_button = QPushButton("Open Selected Profile")
         self.open_button.clicked.connect(self.open_selected)
@@ -168,6 +172,40 @@ class ProfileDashboard(QDialog):
             self, "Backup Complete",
             "Encrypted snapshot saved to:\\n" + str(destination)
             + "\\nKeep the passphrase safe; it cannot be recovered.",
+        )
+
+    def restore_new_profile(self):
+        """Never overwrite an existing profile while restoring a snapshot."""
+        path, _filter = QFileDialog.getOpenFileName(
+            self, "Select Encrypted Backup", str(self.profiles_dir.parent / "backups"),
+            "DevSeaTech Backup (*.dstbak)",
+        )
+        if not path:
+            return
+        name, ok = QInputDialog.getText(
+            self, "New Profile Name", "Name for the restored profile:",
+        )
+        if not ok:
+            return
+        secret, ok = QInputDialog.getText(
+            self, "Decrypt Backup", "Backup passphrase:", QLineEdit.Password,
+        )
+        if not ok:
+            return
+        try:
+            target = restore_as_new_profile(
+                Path(path), secret, self.profiles_dir, name.strip(),
+            )
+        except (OSError, ValueError, RuntimeError) as exc:
+            QMessageBox.warning(self, "Restore Failed", str(exc))
+            return
+        finally:
+            secret = ""
+        self.refresh()
+        QMessageBox.information(
+            self, "Restore Complete",
+            "Restored to a new profile: " + target.name
+            + "\\nWebsite sessions may require signing in again.",
         )
 
     def open_selected(self):
