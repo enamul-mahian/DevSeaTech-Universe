@@ -1,0 +1,69 @@
+# Implementation Status
+
+As of 2026-10-30. This file tracks real, verified progress. A feature is only
+advanced to a stronger status when there is evidence for it (a passing test, a
+runtime check) — never on compilation or packaging alone.
+
+## Status legend
+- **Spec** — requirement documented and approved.
+- **Impl** — code written.
+- **Unit** — meaningful unit tests pass.
+- **Runtime** — verified running (GUI/offscreen or integration), not just built.
+- **Sec** — security review completed.
+- **Rel** — released to users.
+
+## Current foundation slice (branch `development/foundation-backup-restore`)
+
+| Item | Spec | Impl | Unit | Runtime | Sec | Rel | Evidence |
+|---|---|---|---|---|---|---|---|
+| AF-02 Profile Backup/Restore | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/backup.py`; 10 tests in `tests/test_backup.py` (encrypt round-trip, wrong-key, tamper, retention, atomic write) pass locally |
+| GUI runtime smoke harness | ✅ | ✅ | ✅ | ✅ | ⬜ | ⬜ | `tests/smoke/gui_smoke.py` runs offscreen → "SMOKE OK"; CI `linux-smoke.yml` added |
+| CI: real encryption tests | ✅ | ✅ | ✅ | ✅ | ⬜ | ⬜ | `python-tests.yml` now installs `cryptography` so AF-02 crypto tests run, not skip |
+
+Verified locally this session: full suite **17/17 pass** (`PYTHONPATH=src python -m unittest discover -s tests`), including AF-02 encryption; offscreen GUI smoke exits 0 and constructs a Qt WebEngine window.
+
+## Existing baseline (unchanged, preserved)
+- Desktop browser: `src/devseatech_browser/{app,login_ui,recovery,update_policy}.py` — scrypt master/admin auth, per-profile isolation, session timer, branded neon login, fail-closed auto-update logic. 7 original tests still pass.
+- Docs: license (720h server-time), themes/privacy, installer, release/update policy, milestone 01.
+
+## 18 approved additional features (AF-01 … AF-18)
+Source: `docs/APPROVED-ADDITIONAL-FEATURES.md`. All Spec ✅; implementation per the owner's delivery order (foundation first).
+
+| ID | Feature | Status |
+|---|---|---|
+| AF-01 | Crash Recovery & Session Restore | Spec |
+| AF-02 | Automatic Local Profile Backup | **Impl + Unit** |
+| AF-03 | Profile Health Check | Spec |
+| AF-04 | Engine Compatibility Checker | Spec |
+| AF-05 | Download Manager | Spec |
+| AF-06 | Secure Password Vault | Spec |
+| AF-07 | Profile Import/Export/Clone | Spec |
+| AF-08 | Proxy Health Monitor | Spec |
+| AF-09 | Resource Manager | Spec |
+| AF-10 | License Renewal Reminder | Spec |
+| AF-11 | Profile Templates | Spec |
+| AF-12 | Permission Manager | Spec |
+| AF-13 | Security & Activity Logs | Spec |
+| AF-14 | Browser Diagnostics & Repair | Spec |
+| AF-15 | Workspace & Group Management | Spec |
+| AF-16 | Keyboard Shortcuts Manager | Spec |
+| AF-17 | Website Translation | Spec |
+| AF-18 | Accessibility Settings | Spec |
+
+## Web platform (parked, branch `development/web-platform-phase2`, commit f7eaeeb)
+Commercial platform is item #3 in the approved delivery order, so it is parked
+after a first scaffold:
+- pnpm monorepo (does not touch the Python browser).
+- `packages/ui` cosmic/neon design system (Dark/Light/Auto, reduced-motion starfield, glass primitives).
+- `packages/contracts` license/device/plan/api zod schemas (server-authoritative 720h logic) with unit tests.
+- `apps/web` public homepage + page stubs.
+- Not yet: dependency install + build verification, admin dashboard, API app.
+
+## Not done / honest gaps
+- No security review on any feature yet (Sec ⬜ across the board).
+- AF-02 encryption uses `cryptography` Fernet with a scrypt-derived key; OS-backed
+  keystore integration (brief requirement) is not yet wired — passphrase is
+  supplied by the caller.
+- Web platform dependencies are not installed or build-verified in CI.
+- No deployment, no payments, no real release. Source repo is currently public
+  (owner's call); brief/docs recommend private.
