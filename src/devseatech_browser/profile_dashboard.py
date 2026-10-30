@@ -20,10 +20,11 @@ from PySide6.QtWidgets import (
 class ProfileDashboard(QDialog):
     """First functional iteration of the approved profile management design."""
 
-    def __init__(self, profiles_dir: Path, open_profile, parent=None):
+    def __init__(self, profiles_dir: Path, open_profile, parent=None, create_profile=None):
         super().__init__(parent)
         self.profiles_dir = profiles_dir
         self.open_profile = open_profile
+        self.create_profile = create_profile
         self.setWindowTitle("DevSeaTech Universe — Profiles")
         self.resize(850, 540)
         self.setMinimumSize(640, 400)
@@ -58,6 +59,10 @@ class ProfileDashboard(QDialog):
         refresh_button = QPushButton("Refresh")
         refresh_button.clicked.connect(self.refresh)
         buttons.addWidget(refresh_button)
+        if self.create_profile is not None:
+            create_button = QPushButton("Create Profile")
+            create_button.clicked.connect(self.create_new_profile)
+            buttons.addWidget(create_button)
         buttons.addStretch()
         open_button = QPushButton("Open Selected Profile")
         open_button.clicked.connect(self.open_selected)
@@ -87,6 +92,13 @@ class ProfileDashboard(QDialog):
             return
         self.open_profile(name)
         self.accept()
+
+    def create_new_profile(self):
+        """Delegate creation to Browser so existing administrator checks apply."""
+        if self.create_profile is None:
+            return
+        self.create_profile()
+        self.refresh()
 
     def open_selected(self):
         row = self.table.currentRow()
