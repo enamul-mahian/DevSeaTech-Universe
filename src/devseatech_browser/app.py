@@ -23,6 +23,10 @@ from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from devseatech_browser.login_ui import BrandedLoginDialog
 from devseatech_browser.recovery import archive_preview_auth
+from devseatech_browser.session_restore import (
+    TabEntry, save_session, mark_clean, load_session, SAVE_INTERVAL_MS,
+)
+from devseatech_browser.profile_health import check_all_profiles, Severity
 
 APP_DIR = Path.home() / ".devseatech-browser"
 AUTH_PATH = APP_DIR / "auth.json"
@@ -179,6 +183,8 @@ class Browser(QMainWindow):
         new_profile.triggered.connect(self.create_profile)
         settings = toolbar.addAction("Session Settings")
         settings.triggered.connect(self.configure_timer)
+        health = toolbar.addAction("Health Check")
+        health.triggered.connect(self.run_health_check)
         self.tabs.currentChanged.connect(self.update_address)
         self.add_tab("Default")
         minutes = max(1, min(int(config.get("session_minutes", 60)), 1440))
@@ -187,6 +193,60 @@ class Browser(QMainWindow):
         self.session_timer.timeout.connect(self.check_deadline)
         self.session_timer.start(1000)
         self.statusBar().showMessage(f"Session duration: {minutes} minutes")
+
+        # AF-01: periodic session state save
+        self._save_timer = QTimer(self)
+        self._save_timer.timeout.connect(self._auto_save_session)
+        self._save_timer.start(SAVE_INTERVAL_MS)
+        self._auto_save_session()  # immediate first save
+
+    # ── AF-01 session restore helpers ────────────────────────────────
+
+    def _collect_tabs(self) -> list[TabEntry]:
+        entries: list[TabEntry] = []
+        for i in range(self.tabs.count()):
+            view = self.tabs.widget(i)
+            if view is None:
+                continue
+            url = view.url().toString() if view.url() else ""
+            title = self.tabs.tabText(i)
+            # Recover profile name from the tab title prefix ("Profile: title")
+            profile = "Default"
+            if ": " in title:
+                profile = title.split(": ", 1)[0]
+            entries.append(TabEntry(profile=profile, url=url, title=title))
+        return entries
+
+    def _auto_save_session(self) -> None:
+        save_session(APP_DIR, self._collect_tabs())
+
+    def closeEvent(self, event):  # noqa: N802 — Qt naming
+        """Mark session clean on intentional close."""
+        self._save_timer.stop()
+        mark_clean(APP_DIR)
+        super().closeEvent(event)
+
+    @staticmethod
+    def restore_tabs_from(app_dir: Path) -> list[TabEntry] | None:
+        """Return tabs from a previous unclean exit, or None."""
+        return load_session(app_dir)
+
+    # ── AF-03 profile health check ───────────────────────────────────
+
+    def run_health_check(self) -> None:
+        """Show a dialog with profile health findings."""
+        findings = check_all_profiles(PROFILES_DIR)
+        lines: list[str] = []
+        for f in findings:
+            icon = {"info": "ℹ️", "warning": "⚠️", "error": "❌"}.get(
+                f.severity.value, "•")
+            lines.append(f"{icon}  [{f.profile}] {f.code}: {f.message}")
+        text = "\n".join(lines) if lines else "All profiles healthy."
+        has_errors = any(f.severity == Severity.ERROR for f in findings)
+        if has_errors:
+            QMessageBox.warning(self, "Profile Health Check", text)
+        else:
+            QMessageBox.information(self, "Profile Health Check", text)
 
     def profile_for(self, name: str) -> QWebEngineProfile:
         if name in self.profiles:
@@ -314,6 +374,21 @@ def main():
     if not config:
         return 1
     window = Browser(config)
+
+    # AF-01: offer to restore tabs from an unclean previous exit
+    saved_tabs = Browser.restore_tabs_from(APP_DIR)
+    if saved_tabs:
+        choice = QMessageBox.question(
+            window, "Restore Previous Session",
+            f"The previous session did not close normally.\n"
+            f"Restore {len(saved_tabs)} tab(s)?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if choice == QMessageBox.Yes:
+            for tab in saved_tabs:
+                window.add_tab(tab.profile, tab.url)
+    # Clear the unclean marker now that restore was offered
+    mark_clean(APP_DIR)
+
     window.show()
     return app.exec()
 

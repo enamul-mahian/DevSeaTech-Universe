@@ -19,8 +19,10 @@ runtime check) — never on compilation or packaging alone.
 | AF-02 Profile Backup/Restore | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/backup.py`; 10 tests in `tests/test_backup.py` (encrypt round-trip, wrong-key, tamper, retention, atomic write) pass locally |
 | GUI runtime smoke harness | ✅ | ✅ | ✅ | ✅ | ⬜ | ⬜ | `tests/smoke/gui_smoke.py` runs offscreen → "SMOKE OK"; CI `linux-smoke.yml` added |
 | CI: real encryption tests | ✅ | ✅ | ✅ | ✅ | ⬜ | ⬜ | `python-tests.yml` now installs `cryptography` so AF-02 crypto tests run, not skip |
+| AF-01 Crash Recovery & Session Restore | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/session_restore.py`; 8 tests in `tests/test_session_restore.py`; periodic auto-save + atomic write + clean-exit marker; restore offered on next launch |
+| AF-03 Profile Health Check | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/profile_health.py`; 12 tests in `tests/test_profile_health.py`; checks dir/storage/cache/symlinks/size/cookie-db; non-destructive |
 
-Verified locally this session: full suite **17/17 pass** (`PYTHONPATH=src python -m unittest discover -s tests`), including AF-02 encryption; offscreen GUI smoke exits 0 and constructs a Qt WebEngine window.
+Verified locally this session: full suite **36/36 pass** (`PYTHONPATH=src python -m unittest discover -s tests`), including AF-02 encryption; offscreen GUI smoke exits 0 and constructs a Qt WebEngine window.
 
 ## Existing baseline (unchanged, preserved)
 - Desktop browser: `src/devseatech_browser/{app,login_ui,recovery,update_policy}.py` — scrypt master/admin auth, per-profile isolation, session timer, branded neon login, fail-closed auto-update logic. 7 original tests still pass.
@@ -31,9 +33,9 @@ Source: `docs/APPROVED-ADDITIONAL-FEATURES.md`. All Spec ✅; implementation per
 
 | ID | Feature | Status |
 |---|---|---|
-| AF-01 | Crash Recovery & Session Restore | Spec |
+| AF-01 | Crash Recovery & Session Restore | **Impl + Unit** |
 | AF-02 | Automatic Local Profile Backup | **Impl + Unit** |
-| AF-03 | Profile Health Check | Spec |
+| AF-03 | Profile Health Check | **Impl + Unit** |
 | AF-04 | Engine Compatibility Checker | Spec |
 | AF-05 | Download Manager | Spec |
 | AF-06 | Secure Password Vault | Spec |
