@@ -7,6 +7,7 @@ controls until server-side licensing exists.
 from __future__ import annotations
 
 import math
+import sys
 from PySide6.QtCore import Qt, QTimer, QPointF
 from PySide6.QtGui import (QColor, QLinearGradient, QPainter, QPainterPath,
                           QPen, QPolygonF, QRadialGradient)
@@ -110,6 +111,7 @@ class BrandedLoginDialog(QDialog):
     def __init__(self, title: str, fields: list[tuple[str, bool]], parent=None):
         super().__init__(parent)
         self.setWindowTitle("DevSeaTech Universe — " + title)
+        self.setWindowIcon(self.style().standardIcon(self.style().SP_ComputerIcon))
         self.resize(1280, 790)
         self.setMinimumSize(1050, 690)
         self.inputs = {}
@@ -247,6 +249,30 @@ class BrandedLoginDialog(QDialog):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(background)
+
+    def showEvent(self, event):
+        """Use the native Windows dark caption, preserving OS window controls.
+
+        A frameless Qt dialog would sacrifice native resizing, accessibility
+        and snap controls. DWM colors the actual Windows title bar instead.
+        """
+        super().showEvent(event)
+        if sys.platform != "win32":
+            return
+        try:
+            import ctypes
+
+            hwnd = int(self.winId())
+            value = ctypes.c_int(1)
+            # Windows 10/11 use 20; older Windows 10 builds use 19.
+            dwm = ctypes.windll.dwmapi.DwmSetWindowAttribute
+            result = dwm(hwnd, 20, ctypes.byref(value), ctypes.sizeof(value))
+            if result != 0:
+                dwm(hwnd, 19, ctypes.byref(value), ctypes.sizeof(value))
+            # The border is handled by the OS; keep native drag/resize/snap.
+        except (AttributeError, OSError, ValueError):
+            # Older platforms retain their system title bar, not a broken UI.
+            return
 
     @staticmethod
     def _set_password_visibility(
