@@ -6,6 +6,7 @@ tab API. No profile or credential files are modified by the dashboard.
 from __future__ import annotations
 
 from pathlib import Path
+from devseatech_browser.profile_listing import list_profiles
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -14,16 +15,6 @@ from PySide6.QtWidgets import (
 )
 
 
-def list_profiles(root: Path) -> list[str]:
-    """Return safe names for existing on-disk profile directories."""
-    if not root.is_dir():
-        return []
-    return sorted(
-        entry.name for entry in root.iterdir()
-        if entry.is_dir() and not entry.is_symlink()
-        and 0 < len(entry.name) <= 40
-        and all(ch.isalnum() or ch in "-_" for ch in entry.name)
-    )
 
 
 class ProfileDashboard(QDialog):
