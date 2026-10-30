@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from devseatech_browser.profile_dashboard import list_profiles
+from devseatech_browser.profile_listing import list_profiles
 
 
 class ProfileListingTests(unittest.TestCase):
