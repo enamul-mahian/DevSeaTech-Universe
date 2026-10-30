@@ -192,9 +192,13 @@ def _label(text, size=14, color=_TEXT, bold=False, letter_spacing=0):
     font_weight = "600" if bold else "400"
     style = (f"background: transparent; border: 0; color: {color}; "
              f"font-size: {size}px; font-weight: {font_weight};")
-    if letter_spacing > 0:
-        style += f" letter-spacing: {letter_spacing}px;"
+    # NOTE: letter-spacing via CSS causes rendering artifacts on Windows Qt.
+    # Use QFont.setLetterSpacing() instead when spacing is needed.
     lbl.setStyleSheet(style)
+    if letter_spacing > 0:
+        font = lbl.font()
+        font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, letter_spacing)
+        lbl.setFont(font)
     return lbl
 
 
@@ -491,8 +495,8 @@ class BrandedLoginDialog(QDialog):
         form.addWidget(card_footer_sep)
         form.addSpacing(8)
         form.addWidget(
-            _label("LOCAL  •  ADMIN-PROTECTED", 9,
-                   "#506878", letter_spacing=1),
+            _label("LOCAL ACCESS  •  ADMIN-PROTECTED", 9,
+                   "#506878"),
             0, Qt.AlignCenter
         )
 
