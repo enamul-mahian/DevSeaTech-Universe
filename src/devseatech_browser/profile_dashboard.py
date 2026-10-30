@@ -21,11 +21,12 @@ from PySide6.QtWidgets import (
 class ProfileDashboard(QDialog):
     """First functional iteration of the approved profile management design."""
 
-    def __init__(self, profiles_dir: Path, open_profile, parent=None, create_profile=None):
+    def __init__(self, profiles_dir: Path, open_profile, parent=None, create_profile=None, is_profile_active=None):
         super().__init__(parent)
         self.profiles_dir = profiles_dir
         self.open_profile = open_profile
         self.create_profile = create_profile
+        self.is_profile_active = is_profile_active
         self.setWindowTitle("DevSeaTech Universe — Profiles")
         self.resize(850, 540)
         self.setMinimumSize(640, 400)
@@ -136,14 +137,12 @@ class ProfileDashboard(QDialog):
             self.refresh()
             return
         name = item.text()
-        answer = QMessageBox.question(
-            self, "Profile Backup",
-            "Close all tabs for this profile before backing up. "
-            "Live browser files can change during a backup. "
-            "Have you closed all tabs for this profile?",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
-        )
-        if answer != QMessageBox.Yes:
+        if self.is_profile_active is None or self.is_profile_active(name):
+            QMessageBox.warning(
+                self, "Profile In Use",
+                "Cannot back up an open or unverified profile. "
+                "Close all browser tabs for this profile and try again.",
+            )
             return
         secret, ok = QInputDialog.getText(
             self, "Encrypt Profile Backup", "Backup passphrase (12+ characters):",
