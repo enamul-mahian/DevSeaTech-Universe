@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * DevSeaTech Universe theme variables.
+ * Values are HSL triplets so Tailwind can apply opacity: hsl(var(--x) / <alpha>).
+ * Dark is the default; .light overrides; next-themes toggles the html class.
+ */
+@layer base {
+  :root,
+  .dark {
+    --background: 221 84% 7%;
+    --surface: 214 61% 16%;
+    --card: 216 72% 10%;
+    --card-foreground: 192 100% 94%;
+    --popover: 216 72% 9%;
+    --foreground: 192 100% 94%;
+    --muted: 214 40% 18%;
+    --muted-foreground: 210 35% 72%;
+    --primary: 195 100% 54%;
+    --primary-foreground: 222 84% 6%;
+    --accent: 189 100% 60%;
+    --accent-foreground: 222 84% 6%;
+    --border: 205 48% 28%;
+    --input: 213 45% 24%;
+    --ring: 195 100% 54%;
+    --success: 158 64% 52%;
+    --danger: 0 84% 71%;
+    --warning: 43 96% 56%;
+    --glass: 216 72% 12%;
+    --glass-alpha: 0.55;
+    --radius: 0.85rem;
+  }
+
+  .light {
+    --background: 205 55% 97%;
+    --surface: 205 40% 93%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 13%;
+    --popover: 0 0% 100%;
+    --foreground: 222 47% 13%;
+    --muted: 210 30% 90%;
+    --muted-foreground: 215 20% 40%;
+    --primary: 205 92% 44%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 190 85% 42%;
+    --accent-foreground: 0 0% 100%;
+    --border: 210 28% 82%;
+    --input: 210 28% 86%;
+    --ring: 205 92% 44%;
+    --success: 158 64% 40%;
+    --danger: 0 72% 51%;
+    --warning: 38 92% 46%;
+    --glass: 205 50% 99%;
+    --glass-alpha: 0.72;
+    --radius: 0.85rem;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+@layer components {
+  /* Glassmorphism surface with a restrained neon edge. */
+  .glass {
+    background-color: hsl(var(--glass) / var(--glass-alpha));
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid hsl(var(--border) / 0.8);
+    box-shadow:
+      0 1px 0 0 hsl(var(--accent) / 0.08) inset,
+      0 20px 48px -24px hsl(221 84% 2% / 0.7);
+  }
+
+  .neon-text {
+    color: hsl(var(--accent));
+    text-shadow: 0 0 18px hsl(var(--accent) / 0.45);
+  }
+
+  .neon-ring {
+    box-shadow: 0 0 0 1px hsl(var(--accent) / 0.5), 0 0 24px -4px hsl(var(--accent) / 0.55);
+  }
+}
+
+@layer utilities {
+  .bg-space-gradient {
+    background-image:
+      radial-gradient(1200px 600px at 78% -10%, hsl(var(--accent) / 0.12), transparent 60%),
+      radial-gradient(900px 500px at 10% 110%, hsl(var(--primary) / 0.1), transparent 55%),
+      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--surface) / 0.5) 100%);
+  }
+}
+
+/* Motion is opt-out: honor the OS reduced-motion preference everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

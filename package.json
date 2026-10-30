@@ -1,0 +1,22 @@
+{
+  "name": "devseatech-universe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DevSeaTech Universe web platform monorepo (public website, admin dashboard, API). The desktop browser lives under src/devseatech_browser and is not part of this workspace.",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @devseatech/web dev",
+    "dev:admin": "pnpm --filter @devseatech/admin dev",
+    "dev:api": "pnpm --filter @devseatech/api dev",
+    "build": "pnpm -r --filter \"./apps/*\" build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r --if-present lint"
+  },
+  "devDependencies": {
+    "typescript": "5.7.3"
+  }
+}

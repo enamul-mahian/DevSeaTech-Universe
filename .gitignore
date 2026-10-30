@@ -10,3 +10,14 @@ build/
 *.db
 *.sqlite*
 *.log
+
+# Node / web platform
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+.env.local
+.env.*.local
+coverage/
+.vercel/
