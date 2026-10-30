@@ -13,7 +13,7 @@ from PySide6.QtGui import (QColor, QLinearGradient, QPainter, QPainterPath,
                           QPen, QPolygonF, QRadialGradient)
 from PySide6.QtWidgets import (
     QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QVBoxLayout, QWidget,
+    QPushButton, QVBoxLayout, QWidget, QStyle,
 )
 
 
@@ -111,7 +111,7 @@ class BrandedLoginDialog(QDialog):
     def __init__(self, title: str, fields: list[tuple[str, bool]], parent=None):
         super().__init__(parent)
         self.setWindowTitle("DevSeaTech Universe — " + title)
-        self.setWindowIcon(self.style().standardIcon(self.style().SP_ComputerIcon))
+        self.setWindowIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon))
         self.resize(1280, 790)
         self.setMinimumSize(1050, 690)
         self.inputs = {}
