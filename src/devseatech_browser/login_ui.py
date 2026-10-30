@@ -112,19 +112,16 @@ class CosmicBackground(QWidget):
         p.drawEllipse(QPointF(planet_cx, planet_cy),
                       planet_r * 1.6, planet_r * 0.35)
 
-        # ── Stars with twinkle ──
+        # ── Stars with twinkle (all drawn as tiny ellipses for DPI safety) ──
         for s in self._stars:
             x = s.x_frac * w
             y = s.y_frac * h
             twinkle = 0.5 + 0.5 * math.sin(t * 0.06 + s.phase)
             alpha = int(s.base_alpha * (0.4 + 0.6 * twinkle))
-            if s.size <= 1:
-                p.setPen(QColor(200, 230, 255, alpha))
-                p.drawPoint(int(x), int(y))
-            else:
-                p.setPen(Qt.NoPen)
-                p.setBrush(QColor(200, 230, 255, alpha))
-                p.drawEllipse(QPointF(x, y), s.size * 0.5, s.size * 0.5)
+            r = max(0.6, s.size * 0.5)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(200, 230, 255, alpha))
+            p.drawEllipse(QPointF(x, y), r, r)
 
         # ── Horizon glow line ──
         horizon_y = h * 0.82
@@ -325,8 +322,8 @@ class BrandedLoginDialog(QDialog):
 
         card = QFrame()
         card.setObjectName("authCard")
-        card.setMaximumWidth(420)
-        card.setMinimumWidth(340)
+        card.setMaximumWidth(440)
+        card.setMinimumWidth(360)
         card.setStyleSheet(f"""
             QFrame#authCard {{
                 background-color: {_CARD_BG};
@@ -406,15 +403,9 @@ class BrandedLoginDialog(QDialog):
         form.setContentsMargins(36, 32, 36, 28)
         form.setSpacing(10)
 
-        # Card header — lock icon + eyebrow
-        header_row = QHBoxLayout()
-        lock_icon = QLabel("🔒")
-        lock_icon.setStyleSheet("background: transparent; border: 0; font-size: 14px;")
-        header_row.addWidget(lock_icon)
-        header_row.addWidget(
-            _label("SECURE ACCESS", 10, _ACCENT, True, 3))
-        header_row.addStretch()
-        form.addLayout(header_row)
+        # Card header — eyebrow with shield character
+        eyebrow = _label("⬡  SECURE ACCESS", 10, _ACCENT, True, 3)
+        form.addWidget(eyebrow)
 
         form.addSpacing(6)
 
@@ -500,7 +491,7 @@ class BrandedLoginDialog(QDialog):
         form.addWidget(card_footer_sep)
         form.addSpacing(8)
         form.addWidget(
-            _label("LOCAL ACCESS  •  ADMIN-PROTECTED", 10,
+            _label("LOCAL  •  ADMIN-PROTECTED", 9,
                    "#506878", letter_spacing=1),
             0, Qt.AlignCenter
         )
