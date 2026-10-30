@@ -7,102 +7,210 @@ controls until server-side licensing exists.
 from __future__ import annotations
 
 import math
+import random
 import sys
-from PySide6.QtCore import Qt, QTimer, QPointF
+from PySide6.QtCore import Qt, QTimer, QPointF, QRectF
 from PySide6.QtGui import (QColor, QLinearGradient, QPainter, QPainterPath,
-                          QPen, QPolygonF, QRadialGradient)
+                          QPen, QPolygonF, QRadialGradient, QFont,
+                          QConicalGradient)
 from PySide6.QtWidgets import (
     QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QVBoxLayout, QWidget, QStyle,
+    QPushButton, QVBoxLayout, QWidget, QStyle, QGraphicsDropShadowEffect,
+    QSizePolicy,
 )
 
 
-class GalaxyBackground(QWidget):
-    """Low-cost animated starfield with reduced-motion compatibility."""
+# ─── Colour palette ─────────────────────────────────────────────────
+_DEEP = "#020a1a"
+_MID  = "#0a1e3d"
+_ACCENT = "#00d4ff"
+_ACCENT_DIM = "#0891b2"
+_GLOW = "#00b4d8"
+_TEXT = "#e8f4ff"
+_TEXT_DIM = "#8cb4d0"
+_CARD_BG = "rgba(6, 18, 42, 235)"
+_CARD_BORDER = "rgba(0, 180, 216, 0.35)"
+_INPUT_BG = "#0c2240"
+_INPUT_BORDER = "#1a4a6e"
+_BTN_PRIMARY = "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0077cc, stop:1 #00aadd)"
+_BTN_HOVER = "qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0088dd, stop:1 #00bbee)"
+
+
+class _Star:
+    """Pre-computed star position with twinkle phase."""
+    __slots__ = ('x_frac', 'y_frac', 'size', 'phase', 'base_alpha')
+
+    def __init__(self):
+        self.x_frac = random.random()
+        self.y_frac = random.random()
+        self.size = random.choice([1, 1, 1, 2, 2, 3])
+        self.phase = random.uniform(0, math.tau)
+        self.base_alpha = random.randint(60, 200)
+
+
+class CosmicBackground(QWidget):
+    """Smooth animated cosmic background with nebula, stars, and aurora."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.tick = 0
-        self.setObjectName("galaxy")
+        self.setObjectName("cosmic")
+        self._stars = [_Star() for _ in range(220)]
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.advance)
-        self.timer.start(90)
+        self.timer.timeout.connect(self._advance)
+        self.timer.start(50)
 
-    def advance(self):
-        self.tick = (self.tick + 1) % 720
+    def _advance(self):
+        self.tick = (self.tick + 1) % 3600
         self.update()
 
     def paintEvent(self, event):
-        """Render a native, resolution-independent cosmic landscape.
-
-        The artwork is drawn with Qt, not a static mockup: the login inputs
-        and existing authentication workflow remain fully interactive.
-        """
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
         w, h = max(1, self.width()), max(1, self.height())
-        sky = QLinearGradient(0, 0, w, h)
-        sky.setColorAt(0, QColor("#020818"))
-        sky.setColorAt(0.52, QColor("#09295b"))
-        sky.setColorAt(1, QColor("#020918"))
-        painter.fillRect(self.rect(), sky)
+        t = self.tick
 
-        # Soft galaxy radiance and a distant planetary horizon.
-        glow = QRadialGradient(QPointF(w * .63, h * .20), w * .54)
-        glow.setColorAt(0, QColor(0, 130, 255, 115))
-        glow.setColorAt(.48, QColor(11, 65, 150, 52))
-        glow.setColorAt(1, QColor(0, 0, 0, 0))
-        painter.fillRect(self.rect(), glow)
-        painter.setPen(QPen(QColor(80, 205, 255, 135), 2))
-        painter.setBrush(QColor(20, 62, 128, 44))
-        painter.drawEllipse(QPointF(w * .90, h * .02),
-                            w * .27, h * .34)
+        # ── Deep space gradient ──
+        sky = QLinearGradient(0, 0, w * 0.3, h)
+        sky.setColorAt(0.0, QColor("#010714"))
+        sky.setColorAt(0.3, QColor("#071e3a"))
+        sky.setColorAt(0.6, QColor("#0a1428"))
+        sky.setColorAt(1.0, QColor("#020810"))
+        p.fillRect(self.rect(), sky)
 
-        for i in range(185):
-            x = (i * 397 + 41) % w
-            y = (i * 179 + 29) % h
-            brightness = 85 + int(85 * (1 + math.sin(self.tick / 30 + i)) / 2)
-            painter.setPen(QColor(170, 224, 255, brightness))
-            painter.drawPoint(x, y)
+        # ── Primary nebula — upper right ──
+        neb1 = QRadialGradient(QPointF(w * 0.72, h * 0.18), w * 0.48)
+        neb1.setColorAt(0.0, QColor(0, 120, 220, 70))
+        neb1.setColorAt(0.3, QColor(0, 80, 180, 35))
+        neb1.setColorAt(0.6, QColor(10, 40, 100, 15))
+        neb1.setColorAt(1.0, QColor(0, 0, 0, 0))
+        p.fillRect(self.rect(), neb1)
 
-        # Three mountain layers give depth without external image assets.
-        for i, (base, top, fill) in enumerate((
-            (.82, .49, "#0b2650"),
-            (.91, .58, "#071b38"),
-            (1.03, .69, "#030d24"),
-        )):
-            ridge = QPolygonF([QPointF(0, h)])
-            for j in range(17):
-                x = (j / 16) * w
-                peak = h * (top + .10 * (1 + math.sin(j * (2.17 + i) + i)))
-                peak += h * .065 * math.sin(j * 4.7 + i)
-                ridge.append(QPointF(x, min(h * base, peak)))
-            ridge.append(QPointF(w, h))
-            ridge.append(QPointF(0, h))
-            painter.setPen(Qt.NoPen)
-            painter.setBrush(QColor(fill))
-            painter.drawPolygon(ridge)
-        painter.setPen(QPen(QColor(24, 163, 255, 64), 2))
-        painter.drawLine(0, int(h * .85), w, int(h * .89))
+        # ── Secondary nebula — lower left (subtle purple) ──
+        neb2 = QRadialGradient(QPointF(w * 0.15, h * 0.75), w * 0.35)
+        neb2.setColorAt(0.0, QColor(60, 20, 120, 30))
+        neb2.setColorAt(0.5, QColor(30, 10, 80, 12))
+        neb2.setColorAt(1.0, QColor(0, 0, 0, 0))
+        p.fillRect(self.rect(), neb2)
 
-        # Shooting stars are decorative only; never cover login controls.
-        for i in range(2):
-            x = (self.tick * (3 + i) + i * 590) % (w + 380) - 190
-            y = h * (.17 + i * .32) + x * .075
-            painter.setPen(QPen(QColor(75, 213, 255, 135), 2))
-            painter.drawLine(int(x - 115), int(y + 42),
-                             int(x), int(y))
-        painter.end()
+        # ── Distant planet with subtle ring ──
+        planet_cx, planet_cy = w * 0.88, h * 0.08
+        planet_r = min(w, h) * 0.09
+        planet_grad = QRadialGradient(
+            QPointF(planet_cx - planet_r * 0.3, planet_cy - planet_r * 0.3),
+            planet_r * 1.2
+        )
+        planet_grad.setColorAt(0.0, QColor(40, 100, 160, 80))
+        planet_grad.setColorAt(0.6, QColor(15, 50, 100, 50))
+        planet_grad.setColorAt(1.0, QColor(5, 15, 40, 20))
+        p.setPen(QPen(QColor(60, 160, 220, 40), 1))
+        p.setBrush(planet_grad)
+        p.drawEllipse(QPointF(planet_cx, planet_cy), planet_r, planet_r)
+        # Thin ring
+        p.setPen(QPen(QColor(80, 180, 240, 35), 1.5))
+        p.setBrush(Qt.NoBrush)
+        p.drawEllipse(QPointF(planet_cx, planet_cy),
+                      planet_r * 1.6, planet_r * 0.35)
+
+        # ── Stars with twinkle ──
+        for s in self._stars:
+            x = s.x_frac * w
+            y = s.y_frac * h
+            twinkle = 0.5 + 0.5 * math.sin(t * 0.06 + s.phase)
+            alpha = int(s.base_alpha * (0.4 + 0.6 * twinkle))
+            if s.size <= 1:
+                p.setPen(QColor(200, 230, 255, alpha))
+                p.drawPoint(int(x), int(y))
+            else:
+                p.setPen(Qt.NoPen)
+                p.setBrush(QColor(200, 230, 255, alpha))
+                p.drawEllipse(QPointF(x, y), s.size * 0.5, s.size * 0.5)
+
+        # ── Horizon glow line ──
+        horizon_y = h * 0.82
+        glow_line = QLinearGradient(0, horizon_y - 30, 0, horizon_y + 30)
+        glow_line.setColorAt(0.0, QColor(0, 0, 0, 0))
+        glow_line.setColorAt(0.5, QColor(0, 140, 210, 25))
+        glow_line.setColorAt(1.0, QColor(0, 0, 0, 0))
+        p.fillRect(QRectF(0, horizon_y - 30, w, 60), glow_line)
+
+        # ── Mountain silhouettes (3 layers) ──
+        mountains = [
+            (0.78, 0.52, QColor(8, 28, 55, 220), 2.3),
+            (0.88, 0.62, QColor(5, 18, 38, 240), 1.7),
+            (1.02, 0.72, QColor(3, 10, 24, 255), 3.1),
+        ]
+        for base_y, peak_y, color, freq_offset in mountains:
+            poly = QPolygonF([QPointF(0, h)])
+            segments = 24
+            for j in range(segments + 1):
+                x = (j / segments) * w
+                peak = h * (peak_y
+                            + 0.07 * math.sin(j * 0.8 + freq_offset)
+                            + 0.04 * math.sin(j * 2.1 + freq_offset * 1.5)
+                            + 0.02 * math.sin(j * 4.3 + freq_offset * 0.7))
+                y = min(h * base_y, peak)
+                poly.append(QPointF(x, y))
+            poly.append(QPointF(w, h))
+            poly.append(QPointF(0, h))
+            p.setPen(Qt.NoPen)
+            p.setBrush(color)
+            p.drawPolygon(poly)
+
+        # ── Shooting stars ──
+        for i in range(3):
+            speed = 2.5 + i * 1.2
+            length = 80 + i * 40
+            sx = (t * speed + i * 800) % (w + 600) - 300
+            sy = h * (0.10 + i * 0.22) + sx * 0.06
+            alpha = max(0, min(160, 160 - abs(sx - w * 0.5) // 3))
+            if alpha > 10:
+                trail = QLinearGradient(QPointF(sx, sy),
+                                        QPointF(sx - length, sy + length * 0.3))
+                trail.setColorAt(0.0, QColor(180, 240, 255, alpha))
+                trail.setColorAt(1.0, QColor(180, 240, 255, 0))
+                p.setPen(QPen(trail, 1.5))
+                p.drawLine(QPointF(sx, sy),
+                           QPointF(sx - length, sy + length * 0.3))
+
+        # ── Aurora shimmer at horizon ──
+        aurora_phase = t * 0.02
+        for i in range(5):
+            ax = w * (0.1 + i * 0.2)
+            ay = h * 0.76
+            wave = math.sin(aurora_phase + i * 1.3) * h * 0.03
+            aurora_grad = QRadialGradient(QPointF(ax, ay + wave), w * 0.12)
+            aurora_color = QColor(0, 200, 255, int(15 + 10 * math.sin(aurora_phase + i)))
+            aurora_grad.setColorAt(0.0, aurora_color)
+            aurora_grad.setColorAt(1.0, QColor(0, 0, 0, 0))
+            p.fillRect(self.rect(), aurora_grad)
+
+        p.end()
 
 
-def line(text, size=14, color="#d8ecff", bold=False):
-    label = QLabel(text)
-    label.setWordWrap(True)
-    label.setStyleSheet(
-        "background: transparent; border: 0; color: %s; font-size: %dpx; font-weight: %s;"
-        % (color, size, "700" if bold else "400")
+def _label(text, size=14, color=_TEXT, bold=False, letter_spacing=0):
+    """Create a styled label with optional letter spacing."""
+    lbl = QLabel(text)
+    lbl.setWordWrap(True)
+    font_weight = "600" if bold else "400"
+    style = (f"background: transparent; border: 0; color: {color}; "
+             f"font-size: {size}px; font-weight: {font_weight};")
+    if letter_spacing > 0:
+        style += f" letter-spacing: {letter_spacing}px;"
+    lbl.setStyleSheet(style)
+    return lbl
+
+
+def _separator():
+    """Thin horizontal accent line."""
+    sep = QFrame()
+    sep.setFixedHeight(1)
+    sep.setStyleSheet(
+        "background: qlineargradient(x1:0,y1:0,x2:1,y2:0,"
+        "stop:0 transparent, stop:0.2 #0891b2, stop:0.8 #0891b2, "
+        "stop:1 transparent);"
     )
-    return label
+    return sep
 
 
 class BrandedLoginDialog(QDialog):
@@ -111,158 +219,300 @@ class BrandedLoginDialog(QDialog):
     def __init__(self, title: str, fields: list[tuple[str, bool]], parent=None):
         super().__init__(parent)
         self.setWindowTitle("DevSeaTech Universe — " + title)
-        self.setWindowIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon))
-        self.resize(1240, 760)
-        self.setMinimumSize(980, 640)
-        self.inputs = {}
-        self.setStyleSheet("QDialog { background: #06142b; }")
-        background = GalaxyBackground(self)
-        shell = QHBoxLayout(background)
-        shell.setContentsMargins(58, 44, 58, 44)
-        shell.setSpacing(60)
+        self.setWindowIcon(self.style().standardIcon(
+            QStyle.StandardPixmap.SP_ComputerIcon))
+        self.resize(1280, 780)
+        self.setMinimumSize(960, 620)
+        self.inputs: dict[str, QLineEdit] = {}
 
-        # Content hierarchy: brand + three benefits on the left, a compact
-        # interactive authentication card on the right. No filler panels.
+        self.setStyleSheet("QDialog { background: #020a1a; }")
+
+        bg = CosmicBackground(self)
+        shell = QHBoxLayout(bg)
+        shell.setContentsMargins(64, 48, 56, 36)
+        shell.setSpacing(48)
+
+        # ═══════════════════════════════════════════════════
+        #  LEFT SIDE — Brand, tagline, feature highlights
+        # ═══════════════════════════════════════════════════
         left = QVBoxLayout()
-        left.setSpacing(12)
-        left.addWidget(line("∞  DevSeaTech", 34, "#f4fbff", True))
-        left.addWidget(line("U N I V E R S E", 15, "#55d9ff", True))
-        left.addSpacing(7)
-        left.addWidget(line("PRIVATE BROWSING  /  YOUR WORKSPACE", 11, "#8ac8e5"))
-        left.addStretch(2)
-        left.addWidget(line("Your workspace.\nYour control.", 36, "#ffffff", True))
-        left.addSpacing(5)
-        left.addWidget(line(
-            "One secure entrance to your browsing profiles, "
-            "sessions and tools.", 16, "#c0d8ed"
-        ))
-        left.addSpacing(28)
-        for heading, detail in [
-            ("01   Isolated profiles", "Separate sessions, cookies and storage"),
-            ("02   Session control", "Administrator-managed access windows"),
-            ("03   Private by design", "Local-first workspace management"),
-        ]:
-            benefit = QFrame()
-            benefit.setObjectName("benefit")
-            benefit.setStyleSheet(
-                "QFrame#benefit { background: rgba(4, 24, 52, 150); "
-                "border-left: 2px solid #39caff; border-radius: 5px; }"
-            )
-            benefit_layout = QVBoxLayout(benefit)
-            benefit_layout.setContentsMargins(18, 12, 12, 12)
-            benefit_layout.setSpacing(5)
-            benefit_layout.addWidget(line(heading, 15, "#e9f8ff", True))
-            benefit_layout.addWidget(line(detail, 12, "#a8c8e4"))
-            left.addWidget(benefit)
-            left.addSpacing(7)
-        left.addStretch(3)
-        left.addWidget(line(
-            "DEVSEATECH   •   devseatech60@gmail.com   •   +8801805839123",
-            11, "#90bddb"
-        ))
-        shell.addLayout(left, 6)
+        left.setSpacing(8)
 
-        # Center a fixed-width form instead of stretching controls to fill
-        # the height of the window. This keeps the UI balanced on wide monitors.
-        right_column = QVBoxLayout()
-        right_column.addStretch(1)
-        panel = QFrame()
-        panel.setObjectName("accessPanel")
-        panel.setMaximumWidth(505)
-        panel.setStyleSheet("""
-            QFrame#accessPanel {
-                background-color: rgba(5, 19, 43, 224);
-                border: 1px solid #43b9e9;
-                border-radius: 22px;
-            }
-            QLineEdit {
-                color: #ffffff; background: #102a4a;
-                padding: 14px; min-height: 27px;
-                border: 1px solid #36789c; border-radius: 9px;
+        # Brand mark
+        brand = _label("∞  DevSeaTech", 38, "#ffffff", True)
+        left.addWidget(brand)
+
+        universe_tag = _label("U N I V E R S E", 13, _ACCENT, True, 4)
+        left.addWidget(universe_tag)
+
+        left.addSpacing(4)
+        breadcrumb = _label("PRIVATE BROWSING  /  YOUR WORKSPACE", 10,
+                            _TEXT_DIM, letter_spacing=2)
+        left.addWidget(breadcrumb)
+
+        left.addStretch(3)
+
+        # Hero text
+        hero = _label("Your workspace.\nYour control.", 40, "#ffffff", True)
+        hero.setStyleSheet(hero.styleSheet().replace("}", "line-height: 120%; }"))
+        left.addWidget(hero)
+        left.addSpacing(6)
+
+        subtitle = _label(
+            "One secure entrance to your browsing profiles,\n"
+            "sessions, and tools.",
+            16, "#b0ccdf"
+        )
+        left.addWidget(subtitle)
+
+        left.addSpacing(24)
+        left.addWidget(_separator())
+        left.addSpacing(16)
+
+        # Feature highlights with numbered badges
+        features = [
+            ("01", "Isolated profiles",
+             "Separate sessions, cookies and storage"),
+            ("02", "Session control",
+             "Administrator-managed access windows"),
+            ("03", "Private by design",
+             "Local-first workspace management"),
+        ]
+        for num, heading, detail in features:
+            row = QHBoxLayout()
+            row.setSpacing(14)
+            row.setContentsMargins(0, 0, 0, 0)
+
+            # Number badge
+            badge = QLabel(num)
+            badge.setFixedSize(32, 32)
+            badge.setAlignment(Qt.AlignCenter)
+            badge.setStyleSheet(
+                f"background: rgba(0, 180, 216, 0.12); "
+                f"border: 1px solid rgba(0, 180, 216, 0.3); "
+                f"border-radius: 6px; color: {_ACCENT}; "
+                f"font-size: 12px; font-weight: 700;"
+            )
+            row.addWidget(badge, 0, Qt.AlignTop)
+
+            text_col = QVBoxLayout()
+            text_col.setSpacing(2)
+            text_col.addWidget(_label(heading, 14, "#e0f0ff", True))
+            text_col.addWidget(_label(detail, 12, _TEXT_DIM))
+            row.addLayout(text_col, 1)
+
+            left.addLayout(row)
+            left.addSpacing(10)
+
+        left.addStretch(4)
+
+        # Footer
+        left.addWidget(_separator())
+        left.addSpacing(8)
+        footer = _label(
+            "DEVSEATECH   •   devseatech60@gmail.com   •   +8801805839123",
+            10, "#607890", letter_spacing=1
+        )
+        left.addWidget(footer)
+
+        shell.addLayout(left, 55)
+
+        # ═══════════════════════════════════════════════════
+        #  RIGHT SIDE — Auth card (vertically centred)
+        # ═══════════════════════════════════════════════════
+        right_col = QVBoxLayout()
+        right_col.addStretch(1)
+
+        card = QFrame()
+        card.setObjectName("authCard")
+        card.setMaximumWidth(420)
+        card.setMinimumWidth(340)
+        card.setStyleSheet(f"""
+            QFrame#authCard {{
+                background-color: {_CARD_BG};
+                border: 1px solid {_CARD_BORDER};
+                border-radius: 20px;
+            }}
+            QLineEdit {{
+                color: #ffffff;
+                background: {_INPUT_BG};
+                padding: 13px 16px;
+                min-height: 24px;
+                border: 1px solid {_INPUT_BORDER};
+                border-radius: 10px;
+                font-size: 14px;
+                selection-background-color: #0077cc;
+            }}
+            QLineEdit:focus {{
+                border: 1.5px solid {_ACCENT};
+            }}
+            QLineEdit::placeholder {{
+                color: #4a6a84;
+            }}
+            QPushButton#loginSubmit {{
+                color: #ffffff;
+                background: {_BTN_PRIMARY};
+                border: none;
+                border-radius: 10px;
                 font-size: 15px;
-            }
-            QLineEdit:focus { border: 2px solid #46dbff; }
-            QPushButton {
-                color: #ffffff; background: #0879d2;
-                border: 1px solid #36baf5;
-                border-radius: 9px; font-size: 15px; font-weight: 700;
+                font-weight: 700;
                 padding: 14px;
-            }
-            QPushButton:hover { background: #069ce6; }
-            QPushButton:focus { border: 2px solid #c9f5ff; }
-            QPushButton#passwordVisibility {
-                background: #10365b; padding: 14px 12px;
-            }
-            QPushButton#recovery {
-                background: transparent; color: #7ad9ff;
-                font-size: 12px; font-weight: 400;
-                border: none; padding: 7px;
-            }
+                letter-spacing: 0.5px;
+            }}
+            QPushButton#loginSubmit:hover {{
+                background: {_BTN_HOVER};
+            }}
+            QPushButton#loginSubmit:pressed {{
+                background: #006bb3;
+            }}
+            QPushButton#loginSubmit:focus {{
+                outline: 2px solid {_ACCENT};
+                outline-offset: 2px;
+            }}
+            QPushButton#passwordVisibility {{
+                background: rgba(0, 180, 216, 0.08);
+                border: 1px solid rgba(0, 180, 216, 0.25);
+                border-radius: 10px;
+                color: {_ACCENT};
+                font-size: 12px;
+                font-weight: 600;
+                padding: 13px 14px;
+                min-width: 48px;
+            }}
+            QPushButton#passwordVisibility:hover {{
+                background: rgba(0, 180, 216, 0.15);
+            }}
+            QPushButton#recovery {{
+                background: transparent;
+                color: {_ACCENT_DIM};
+                font-size: 12px;
+                font-weight: 400;
+                border: none;
+                padding: 6px;
+            }}
+            QPushButton#recovery:hover {{
+                color: {_ACCENT};
+            }}
         """)
-        right = QVBoxLayout(panel)
-        right.setContentsMargins(35, 34, 35, 29)
-        right.setSpacing(13)
-        eyebrow = line("ACCOUNT ACCESS", 11, "#64dfff", True)
-        right.addWidget(eyebrow)
-        right.addWidget(line(
-            "Welcome back" if title == "Master Login" else title,
-            30, "#ffffff", True
-        ))
-        right.addWidget(line(
+
+        # Glow effect behind card
+        glow_effect = QGraphicsDropShadowEffect()
+        glow_effect.setBlurRadius(60)
+        glow_effect.setColor(QColor(0, 140, 200, 30))
+        glow_effect.setOffset(0, 4)
+        card.setGraphicsEffect(glow_effect)
+
+        form = QVBoxLayout(card)
+        form.setContentsMargins(36, 32, 36, 28)
+        form.setSpacing(10)
+
+        # Card header — lock icon + eyebrow
+        header_row = QHBoxLayout()
+        lock_icon = QLabel("🔒")
+        lock_icon.setStyleSheet("background: transparent; border: 0; font-size: 14px;")
+        header_row.addWidget(lock_icon)
+        header_row.addWidget(
+            _label("SECURE ACCESS", 10, _ACCENT, True, 3))
+        header_row.addStretch()
+        form.addLayout(header_row)
+
+        form.addSpacing(6)
+
+        # Title
+        is_login = title == "Master Login"
+        card_title = _label(
+            "Welcome back" if is_login else title,
+            26, "#ffffff", True
+        )
+        form.addWidget(card_title)
+
+        card_sub = _label(
             "Enter your master credentials to continue."
-            if title == "Master Login"
-            else "Securely configure your local credentials.",
-            13, "#acc7df"
-        ))
-        right.addSpacing(22)
-        for label, secret in fields:
-            right.addWidget(line(label.upper(), 11, "#b6d7ec", True))
+            if is_login
+            else "Set up your local credentials to get started.",
+            13, "#8cafc8"
+        )
+        form.addWidget(card_sub)
+
+        form.addSpacing(18)
+
+        # ── Input fields ──
+        for label_text, secret in fields:
+            field_label = _label(label_text.upper(), 11, _TEXT_DIM, True, 1)
+            form.addWidget(field_label)
+            form.addSpacing(4)
+
             editor = QLineEdit()
-            editor.setPlaceholderText("Enter " + label.lower())
+            editor.setPlaceholderText("Enter " + label_text.lower() + "...")
             editor.returnPressed.connect(self.accept)
-            self.inputs[label] = editor
+            self.inputs[label_text] = editor
+
             if secret:
                 editor.setEchoMode(QLineEdit.Password)
                 field_row = QHBoxLayout()
                 field_row.setSpacing(8)
                 field_row.addWidget(editor, 1)
-                visibility = QPushButton("Show")
-                visibility.setObjectName("passwordVisibility")
-                visibility.setCheckable(True)
-                visibility.setAccessibleName("Show " + label.lower())
-                visibility.toggled.connect(
-                    lambda visible, field=editor, control=visibility, name=label:
-                    self._set_password_visibility(field, control, name, visible)
+
+                vis_btn = QPushButton("Show")
+                vis_btn.setObjectName("passwordVisibility")
+                vis_btn.setCheckable(True)
+                vis_btn.setCursor(Qt.PointingHandCursor)
+                vis_btn.setAccessibleName("Show " + label_text.lower())
+                vis_btn.toggled.connect(
+                    lambda visible, f=editor, b=vis_btn, n=label_text:
+                    self._set_password_visibility(f, b, n, visible)
                 )
-                field_row.addWidget(visibility)
-                right.addLayout(field_row)
+                field_row.addWidget(vis_btn)
+                form.addLayout(field_row)
             else:
-                right.addWidget(editor)
-        right.addSpacing(19)
-        submit = QPushButton(
-            "Create Credentials" if title == "First-Time Setup"
-            else "Unlock Universe  →"
-        )
+                form.addWidget(editor)
+
+            form.addSpacing(8)
+
+        form.addSpacing(12)
+
+        # Submit button
+        submit_text = ("Create Credentials" if title == "First-Time Setup"
+                       else "Unlock Universe  →")
+        submit = QPushButton(submit_text)
         submit.setObjectName("loginSubmit")
-        submit.setMinimumHeight(54)
+        submit.setMinimumHeight(50)
+        submit.setCursor(Qt.PointingHandCursor)
         submit.clicked.connect(self.accept)
-        right.addWidget(submit)
-        if title == "Master Login":
+        form.addWidget(submit)
+
+        # Recovery link
+        if is_login:
+            form.addSpacing(4)
             recovery = QPushButton("Reset development-preview access")
             recovery.setObjectName("recovery")
+            recovery.setCursor(Qt.PointingHandCursor)
             recovery.clicked.connect(lambda: self.done(2))
-            right.addWidget(recovery)
-        right.addSpacing(14)
-        right.addWidget(line(
-            "LOCAL ACCESS  •  ADMIN-PROTECTED SETTINGS", 10, "#759cb8"
-        ))
-        right_column.addWidget(panel, 0, Qt.AlignHCenter)
-        right_column.addStretch(1)
-        shell.addLayout(right_column, 5)
+            form.addWidget(recovery, 0, Qt.AlignCenter)
 
+        form.addSpacing(12)
+
+        # Card footer
+        card_footer_sep = QFrame()
+        card_footer_sep.setFixedHeight(1)
+        card_footer_sep.setStyleSheet(
+            "background: rgba(0, 180, 216, 0.15);")
+        form.addWidget(card_footer_sep)
+        form.addSpacing(8)
+        form.addWidget(
+            _label("LOCAL ACCESS  •  ADMIN-PROTECTED", 10,
+                   "#506878", letter_spacing=1),
+            0, Qt.AlignCenter
+        )
+
+        right_col.addWidget(card, 0, Qt.AlignHCenter)
+        right_col.addStretch(1)
+        shell.addLayout(right_col, 45)
+
+        # Final layout
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
-        outer.addWidget(background)
+        outer.addWidget(bg)
 
     def showEvent(self, event):
         """Use the native Windows dark caption, preserving OS window controls.
@@ -278,14 +528,12 @@ class BrandedLoginDialog(QDialog):
 
             hwnd = int(self.winId())
             value = ctypes.c_int(1)
-            # Windows 10/11 use 20; older Windows 10 builds use 19.
+            # Windows 10/11 use attribute 20; older builds use 19.
             dwm = ctypes.windll.dwmapi.DwmSetWindowAttribute
             result = dwm(hwnd, 20, ctypes.byref(value), ctypes.sizeof(value))
             if result != 0:
                 dwm(hwnd, 19, ctypes.byref(value), ctypes.sizeof(value))
-            # The border is handled by the OS; keep native drag/resize/snap.
         except (AttributeError, OSError, ValueError):
-            # Older platforms retain their system title bar, not a broken UI.
             return
 
     @staticmethod
