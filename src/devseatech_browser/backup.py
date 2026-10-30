@@ -234,8 +234,10 @@ def restore_backup(
     expected: dict[str, dict] = {}
     for entry in entries:
         name = entry["path"]
+        if not isinstance(name, str):
+            raise ValueError("Unsafe backup path type")
         parts = name.split("/")
-        if (not isinstance(name, str) or not name or name.startswith("/")
+        if (not name or name.startswith("/")
                 or chr(92) in name or ":" in name
                 or any(part in ("", ".", "..") for part in parts)
                 or name in expected):
