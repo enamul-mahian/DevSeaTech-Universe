@@ -153,6 +153,7 @@ class Browser(QMainWindow):
     def __init__(self, config: dict):
         super().__init__()
         self.config = config
+        self._admin_unlocked = False  # In-memory only; reset on exit.
         self.profiles: dict[str, QWebEngineProfile] = {}
         self.setWindowTitle("DevSeaTech Universe — Development Preview")
         self.resize(1220, 790)
@@ -247,11 +248,18 @@ class Browser(QMainWindow):
             self.close()
 
     def admin_confirmed(self) -> bool:
-        dialog = CredentialDialog("Administrator Authorization",
+        if self._admin_unlocked:
+            return True
+        dialog = CredentialDialog("Unlock Admin for This Session",
                                   [("Administrator password", True)], self)
-        return (dialog.exec() == QDialog.Accepted
-                and verify_password(dialog.values()["Administrator password"],
-                                    self.config["admin"]))
+        verified = (dialog.exec() == QDialog.Accepted
+                    and verify_password(dialog.values()["Administrator password"],
+                                        self.config["admin"]))
+        if verified:
+            self._admin_unlocked = True
+            self.statusBar().showMessage(
+                "Administrator unlocked for this browser session.")
+        return verified
 
     def configure_timer(self):
         if not self.admin_confirmed():
