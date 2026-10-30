@@ -62,7 +62,10 @@ class ProfileHealthTests(unittest.TestCase):
         target = p / "storage" / "real_file"
         target.write_text("data")
         link = p / "storage" / "sneaky_link"
-        link.symlink_to(target)
+        try:
+            link.symlink_to(target)
+        except OSError as exc:
+            self.skipTest(f"Symlink creation is not permitted: {exc}")
         findings = check_profile(p, "sym")
         codes = [f.code for f in findings]
         self.assertIn("SYMLINK_FOUND", codes)

@@ -17,7 +17,12 @@ class ProfileListingTests(unittest.TestCase):
             for name in ("Bravo", "alpha", "Profile_02", ".hidden", "bad name"):
                 (root / name).mkdir()
             (root / "file.txt").write_text("not a profile")
-            (root / "linked").symlink_to(root / "alpha", target_is_directory=True)
+            try:
+                (root / "linked").symlink_to(
+                    root / "alpha", target_is_directory=True
+                )
+            except OSError:
+                pass  # Symlink creation may be disabled for unprivileged Windows users.
             self.assertEqual(list_profiles(root), ["Bravo", "Profile_02", "alpha"])
 
     def test_does_not_create_or_change_profile_directories(self):

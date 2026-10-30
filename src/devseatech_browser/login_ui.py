@@ -160,11 +160,25 @@ class BrandedLoginDialog(QDialog):
             right.addWidget(field_label)
             editor = QLineEdit()
             editor.setPlaceholderText("Enter " + label.lower())
-            if secret:
-                editor.setEchoMode(QLineEdit.Password)
             editor.returnPressed.connect(self.accept)
             self.inputs[label] = editor
-            right.addWidget(editor)
+            if secret:
+                editor.setEchoMode(QLineEdit.Password)
+                field_row = QHBoxLayout()
+                field_row.setSpacing(8)
+                field_row.addWidget(editor, 1)
+                visibility = QPushButton("Show")
+                visibility.setObjectName("passwordVisibility")
+                visibility.setCheckable(True)
+                visibility.setAccessibleName("Show " + label.lower())
+                visibility.toggled.connect(
+                    lambda visible, field=editor, control=visibility, name=label:
+                    self._set_password_visibility(field, control, name, visible)
+                )
+                field_row.addWidget(visibility)
+                right.addLayout(field_row)
+            else:
+                right.addWidget(editor)
         right.addSpacing(13)
         submit = QPushButton(
             "Create Credentials" if title == "First-Time Setup" else "Login to Universe   →"
@@ -191,6 +205,16 @@ class BrandedLoginDialog(QDialog):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(background)
+
+    @staticmethod
+    def _set_password_visibility(
+        editor: QLineEdit, button: QPushButton, label: str, visible: bool
+    ) -> None:
+        editor.setEchoMode(QLineEdit.Normal if visible else QLineEdit.Password)
+        button.setText("Hide" if visible else "Show")
+        button.setAccessibleName(
+            ("Hide " if visible else "Show ") + label.lower()
+        )
 
     def values(self):
         return {key: editor.text() for key, editor in self.inputs.items()}

@@ -5,6 +5,7 @@ round-trip tests are skipped automatically when the optional `cryptography`
 package is not installed, so the dependency-free CI lane still passes.
 """
 import importlib.util
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -57,7 +58,8 @@ class PureLogicTests(unittest.TestCase):
             _atomic_write(dest, b"hello")
             self.assertEqual(dest.read_bytes(), b"hello")
             self.assertFalse(dest.with_name(dest.name + ".part").exists())
-            self.assertEqual(dest.stat().st_mode & 0o777, 0o600)
+            if os.name != "nt":
+                self.assertEqual(dest.stat().st_mode & 0o777, 0o600)
 
     def test_prune_keeps_newest_n(self):
         with tempfile.TemporaryDirectory() as d:
@@ -93,7 +95,8 @@ class EncryptionRoundTripTests(unittest.TestCase):
             backup_dir = root / "backups"
             snapshot = backup.create_backup(profile, backup_dir, PASSPHRASE)
             self.assertTrue(snapshot.exists())
-            self.assertEqual(snapshot.stat().st_mode & 0o777, 0o600)
+            if os.name != "nt":
+                self.assertEqual(snapshot.stat().st_mode & 0o777, 0o600)
 
             target = root / "restored"
             manifest = backup.restore_backup(snapshot, PASSPHRASE, target)

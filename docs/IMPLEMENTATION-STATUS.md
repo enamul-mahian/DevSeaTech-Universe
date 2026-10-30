@@ -1,6 +1,6 @@
 # Implementation Status
 
-As of 2026-10-30. This file tracks real, verified progress. A feature is only
+As of 2026-10-31. This file tracks real, verified progress. A feature is only
 advanced to a stronger status when there is evidence for it (a passing test, a
 runtime check) — never on compilation or packaging alone.
 
@@ -37,7 +37,13 @@ runtime check) — never on compilation or packaging alone.
 | AF-17 Website Translation | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/website_translation.py`; 7 tests in `tests/test_website_translation.py`; privacy disclosure, site exclusion, config persistence, UI stays English |
 | AF-18 Accessibility Settings | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/accessibility_settings.py`; 9 tests in `tests/test_accessibility_settings.py`; presets, font-scale validation, per-profile persistence |
 
-Verified locally this session: full suite **165/165 pass** (`PYTHONPATH=src python -m unittest discover -s tests`), including AF-02 encryption; offscreen GUI smoke exits 0 and constructs a Qt WebEngine window.
+## Main-branch desktop usability milestone (2026-10-31)
+
+| Item | Spec | Impl | Unit | Runtime | Sec | Rel | Evidence |
+|---|---|---|---|---|---|---|---|
+| Login password visibility + profile dashboard empty/search/selection states | ✅ | ✅ | ✅ | ✅ | ⬜ | ⬜ | `tests/smoke/gui_smoke.py` exercises show/hide, search, create refresh, selection gating and opening; Windows offscreen Qt WebEngine smoke passes |
+
+Verified locally on Windows with Python 3.14 and declared GUI/crypto dependencies: **206 tests run successfully, with 2 platform-capability skips** (`PYTHONPATH=src python -m unittest discover -s tests -v`). The offscreen GUI smoke exits 0 and constructs the login dialog, dashboard interactions, and Qt WebEngine-backed browser window. This does not replace manual visual review of the native UI.
 
 ## Existing baseline (unchanged, preserved)
 - Desktop browser: `src/devseatech_browser/{app,login_ui,recovery,update_policy}.py` — scrypt master/admin auth, per-profile isolation, session timer, branded neon login, fail-closed auto-update logic. 7 original tests still pass.
