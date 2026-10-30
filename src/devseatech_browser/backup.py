@@ -228,7 +228,21 @@ def restore_backup(
         manifest = json.loads(manifest_member.read().decode("utf-8"))
         payload_bytes = payload_member.read()
 
-    expected = {e["path"]: e for e in manifest["files"]}
+    # Never trust archive manifests: reject traversal, absolute paths, and
+    # platform-specific separators before any filesystem modification.
+    entries = manifest["files"]
+    expected: dict[str, dict] = {}
+    for entry in entries:
+        name = entry["path"]
+        if not isinstance(name, str):
+            raise ValueError("Unsafe backup path type")
+        parts = name.split("/")
+        if (not name or name.startswith("/")
+                or chr(92) in name or ":" in name
+                or any(part in ("", ".", "..") for part in parts)
+                or name in expected):
+            raise ValueError("Unsafe or duplicate backup path")
+        expected[name] = entry
     staged: dict[str, bytes] = {}
     with tarfile.open(fileobj=io.BytesIO(payload_bytes), mode="r") as tar:
         for name in expected:
