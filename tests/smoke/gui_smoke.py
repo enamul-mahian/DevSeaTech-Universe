@@ -40,7 +40,9 @@ def fail(message: str) -> "NoReturn":  # type: ignore[name-defined]
 
 def main() -> int:
     try:
-        from PySide6.QtWidgets import QApplication
+        from PySide6.QtWidgets import (
+            QApplication, QDialog, QLineEdit, QPushButton,
+        )
         from PySide6.QtCore import QTimer
     except Exception as exc:  # noqa: BLE001
         fail(f"PySide6 import failed: {exc}")
@@ -53,10 +55,60 @@ def main() -> int:
 
         dialog = BrandedLoginDialog("Master Login", [("Master password", True)])
         assert dialog.inputs, "login dialog has no input fields"
+        password = dialog.inputs["Master password"]
+        visibility = dialog.findChild(QPushButton, "passwordVisibility")
+        assert visibility is not None, "password visibility control is missing"
+        assert password.echoMode() == QLineEdit.Password, "password is not hidden by default"
+        visibility.click()
+        assert password.echoMode() == QLineEdit.Normal, "password did not become visible"
+        visibility.click()
+        assert password.echoMode() == QLineEdit.Password, "password did not become hidden again"
     except Exception as exc:  # noqa: BLE001
-        fail(f"login dialog construction failed: {exc}")
+        fail(f"login dialog construction or interaction failed: {exc}")
 
-    # 2. Main window constructs and opens a tab (creates a QWebEngineView).
+    # 2. Dashboard controls cover filtering, empty state, creation and opening.
+    try:
+        from devseatech_browser.profile_dashboard import ProfileDashboard
+
+        with tempfile.TemporaryDirectory() as profile_root:
+            profiles_dir = Path(profile_root)
+            empty_dashboard = ProfileDashboard(profiles_dir, lambda _name: None)
+            assert empty_dashboard.table.rowCount() == 0, "empty store is not empty"
+            assert empty_dashboard.empty_state.text() == (
+                "No profiles yet. Create a profile to get started."
+            ), "empty profile store has no guidance"
+            empty_dashboard.close()
+
+            (profiles_dir / "Existing").mkdir()
+            opened = []
+
+            def create_profile():
+                (profiles_dir / "Created").mkdir()
+
+            dashboard = ProfileDashboard(
+                profiles_dir, opened.append, create_profile=create_profile
+            )
+            assert dashboard.table.rowCount() == 1, "existing profile was not listed"
+            assert not dashboard.open_button.isEnabled(), "open enabled without selection"
+            dashboard.search.setText("missing")
+            assert dashboard.table.rowCount() == 0, "profile search did not filter"
+            assert not dashboard.empty_state.isHidden(), "empty search state is hidden"
+            dashboard.search.clear()
+            create_button = next(
+                button for button in dashboard.findChildren(QPushButton)
+                if button.text() == "Create Profile"
+            )
+            create_button.click()
+            assert dashboard.table.rowCount() == 2, "created profile was not refreshed"
+            dashboard.table.selectRow(0)
+            assert dashboard.open_button.isEnabled(), "open stayed disabled after selection"
+            dashboard.open_selected()
+            assert opened == ["Created"], "selected profile was not opened"
+            assert dashboard.result() == QDialog.Accepted, "dashboard did not close after opening"
+    except Exception as exc:  # noqa: BLE001
+        fail(f"profile dashboard interaction failed: {exc}")
+
+    # 3. Main window constructs and opens a tab (creates a QWebEngineView).
     try:
         from devseatech_browser.app import Browser
 

@@ -66,6 +66,10 @@ class SessionRestoreTests(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].profile, "Y")
 
+    @unittest.skipIf(
+        os.name == "nt",
+        "Windows does not enforce POSIX permission bits through chmod.",
+    )
     def test_atomic_write_permissions(self):
         save_session(self.app_dir, [TabEntry("P", "https://x.com")])
         path = self.app_dir / "session.json"

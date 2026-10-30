@@ -48,12 +48,16 @@ class ProfileDashboard(QDialog):
         self.search.setPlaceholderText("Search profiles")
         self.search.textChanged.connect(self.refresh)
         layout.addWidget(self.search)
+        self.empty_state = QLabel()
+        self.empty_state.setWordWrap(True)
+        layout.addWidget(self.empty_state)
         self.table = QTableWidget(0, 2)
         self.table.setHorizontalHeaderLabels(["Profile", "Storage"])
         self.table.horizontalHeader().setStretchLastSection(True)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.cellDoubleClicked.connect(lambda row, _col: self.activate(row))
+        self.table.itemSelectionChanged.connect(self._update_selection)
         layout.addWidget(self.table)
         buttons = QHBoxLayout()
         refresh_button = QPushButton("Refresh")
@@ -64,15 +68,19 @@ class ProfileDashboard(QDialog):
             create_button.clicked.connect(self.create_new_profile)
             buttons.addWidget(create_button)
         buttons.addStretch()
-        open_button = QPushButton("Open Selected Profile")
-        open_button.clicked.connect(self.open_selected)
-        buttons.addWidget(open_button)
+        self.open_button = QPushButton("Open Selected Profile")
+        self.open_button.clicked.connect(self.open_selected)
+        self.open_button.setEnabled(False)
+        buttons.addWidget(self.open_button)
         layout.addLayout(buttons)
         self.refresh()
 
     def refresh(self, _value=None):
-        names = [name for name in list_profiles(self.profiles_dir)
-                 if self.search.text().casefold() in name.casefold()]
+        all_names = list_profiles(self.profiles_dir)
+        names = [
+            name for name in all_names
+            if self.search.text().casefold() in name.casefold()
+        ]
         self.table.setRowCount(len(names))
         for row, name in enumerate(names):
             item = QTableWidgetItem(name)
@@ -80,6 +88,18 @@ class ProfileDashboard(QDialog):
             self.table.setItem(row, 0, item)
             self.table.setItem(row, 1, QTableWidgetItem("Local profile"))
         self.table.resizeColumnToContents(0)
+        if names:
+            self.empty_state.hide()
+        else:
+            self.empty_state.setText(
+                "No profiles yet. Create a profile to get started."
+                if not all_names else "No profiles match your search."
+            )
+            self.empty_state.show()
+        self._update_selection()
+
+    def _update_selection(self):
+        self.open_button.setEnabled(self.table.currentRow() >= 0)
 
     def activate(self, row: int):
         item = self.table.item(row, 0)
