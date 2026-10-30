@@ -7,8 +7,9 @@ controls until server-side licensing exists.
 from __future__ import annotations
 
 import math
-from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QColor, QLinearGradient, QPainter, QPainterPath, QPen
+from PySide6.QtCore import Qt, QTimer, QPointF
+from PySide6.QtGui import (QColor, QLinearGradient, QPainter, QPainterPath,
+                          QPen, QPolygonF, QRadialGradient)
 from PySide6.QtWidgets import (
     QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QVBoxLayout, QWidget,
@@ -31,26 +32,64 @@ class GalaxyBackground(QWidget):
         self.update()
 
     def paintEvent(self, event):
+        """Render a native, resolution-independent cosmic landscape.
+
+        The artwork is drawn with Qt, not a static mockup: the login inputs
+        and existing authentication workflow remain fully interactive.
+        """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        gradient = QLinearGradient(0, 0, self.width(), self.height())
-        gradient.setColorAt(0, QColor("#030d22"))
-        gradient.setColorAt(.53, QColor("#092857"))
-        gradient.setColorAt(1, QColor("#02091c"))
-        painter.fillRect(self.rect(), gradient)
-        for i in range(105):
-            x = (i * 163 + 31) % max(1, self.width())
-            y = (i * 97 + 17) % max(1, self.height())
-            brightness = 75 + int(90 * (1 + math.sin(self.tick / 25 + i)) / 2)
-            painter.setPen(QColor(150, 215, 255, brightness))
+        w, h = max(1, self.width()), max(1, self.height())
+        sky = QLinearGradient(0, 0, w, h)
+        sky.setColorAt(0, QColor("#020818"))
+        sky.setColorAt(0.52, QColor("#09295b"))
+        sky.setColorAt(1, QColor("#020918"))
+        painter.fillRect(self.rect(), sky)
+
+        # Soft galaxy radiance and a distant planetary horizon.
+        glow = QRadialGradient(QPointF(w * .63, h * .20), w * .54)
+        glow.setColorAt(0, QColor(0, 130, 255, 115))
+        glow.setColorAt(.48, QColor(11, 65, 150, 52))
+        glow.setColorAt(1, QColor(0, 0, 0, 0))
+        painter.fillRect(self.rect(), glow)
+        painter.setPen(QPen(QColor(80, 205, 255, 135), 2))
+        painter.setBrush(QColor(20, 62, 128, 44))
+        painter.drawEllipse(QPointF(w * .90, h * .02),
+                            w * .27, h * .34)
+
+        for i in range(185):
+            x = (i * 397 + 41) % w
+            y = (i * 179 + 29) % h
+            brightness = 85 + int(85 * (1 + math.sin(self.tick / 30 + i)) / 2)
+            painter.setPen(QColor(170, 224, 255, brightness))
             painter.drawPoint(x, y)
-        # Two low-key shooting stars move behind the controls.
+
+        # Three mountain layers give depth without external image assets.
+        for i, (base, top, fill) in enumerate((
+            (.82, .49, "#0b2650"),
+            (.91, .58, "#071b38"),
+            (1.03, .69, "#030d24"),
+        )):
+            ridge = QPolygonF([QPointF(0, h)])
+            for j in range(17):
+                x = (j / 16) * w
+                peak = h * (top + .10 * (1 + math.sin(j * (2.17 + i) + i)))
+                peak += h * .065 * math.sin(j * 4.7 + i)
+                ridge.append(QPointF(x, min(h * base, peak)))
+            ridge.extend([QPointF(w, h), QPointF(0, h)])
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor(fill))
+            painter.drawPolygon(ridge)
+        painter.setPen(QPen(QColor(24, 163, 255, 64), 2))
+        painter.drawLine(0, int(h * .85), w, int(h * .89))
+
+        # Shooting stars are decorative only; never cover login controls.
         for i in range(2):
-            head_x = (self.tick * (5 + i) + i * 400) % (self.width() + 420) - 210
-            head_y = 95 + i * 270 + head_x * .10
-            painter.setPen(QPen(QColor(38, 196, 255, 105), 2))
-            painter.drawLine(int(head_x - 100), int(head_y - 28),
-                             int(head_x), int(head_y))
+            x = (self.tick * (3 + i) + i * 590) % (w + 380) - 190
+            y = h * (.17 + i * .32) + x * .075
+            painter.setPen(QPen(QColor(75, 213, 255, 135), 2))
+            painter.drawLine(int(x - 115), int(y + 42),
+                             int(x), int(y))
         painter.end()
 
 
@@ -70,26 +109,27 @@ class BrandedLoginDialog(QDialog):
     def __init__(self, title: str, fields: list[tuple[str, bool]], parent=None):
         super().__init__(parent)
         self.setWindowTitle("DevSeaTech Universe — " + title)
-        self.resize(1180, 740)
-        self.setMinimumSize(980, 660)
+        self.resize(1280, 790)
+        self.setMinimumSize(1050, 690)
         self.inputs = {}
         self.setStyleSheet("QDialog { background: #06142b; }")
         background = GalaxyBackground(self)
         shell = QHBoxLayout(background)
-        shell.setContentsMargins(36, 36, 36, 36)
-        shell.setSpacing(36)
+        shell.setContentsMargins(54, 50, 54, 50)
+        shell.setSpacing(54)
 
         left = QVBoxLayout()
-        left.setSpacing(15)
-        left.addWidget(line("◆   DevSeaTech Universe", 30, "#f2f9ff", True))
+        left.setSpacing(13)
+        left.addWidget(line("∞   DevSeaTech", 34, "#f2f9ff", True))
+        left.addWidget(line("       U N I V E R S E", 17, "#64d7ff", True))
         left.addWidget(line("SECURE  •  PRIVATE  •  POWERFUL", 12, "#7ecfff"))
-        left.addSpacing(65)
+        left.addSpacing(44)
         left.addWidget(line("Your secure digital workspace", 26, "#ffffff", True))
         left.addWidget(line(
             "Multi-profile browsing with centralized administration "
             "and flexible licensing.", 15, "#afcce6"
         ))
-        left.addSpacing(32)
+        left.addSpacing(23)
         for heading, detail in [
             ("◈   Secure Browsing", "Protect browsing data and user access"),
             ("◎   Multi-Profile System", "Isolated cookies, cache and sessions"),
@@ -104,8 +144,8 @@ class BrandedLoginDialog(QDialog):
         contact = QFrame()
         contact.setObjectName("contact")
         contact.setStyleSheet(
-            "QFrame#contact { background: rgba(3,22,49,195); "
-            "border: 1px solid #1669a7; border-radius: 14px; }"
+            "QFrame#contact { background: rgba(3,22,49,185); "
+            "border: 1px solid #3ebdff; border-radius: 18px; }"
         )
         contact_layout = QVBoxLayout(contact)
         contact_layout.setContentsMargins(17, 17, 17, 17)
@@ -120,29 +160,30 @@ class BrandedLoginDialog(QDialog):
         panel.setObjectName("accessPanel")
         panel.setStyleSheet("""
             QFrame#accessPanel {
-                background-color: rgba(3, 14, 35, 245);
-                border: 2px solid #078ad6;
-                border-radius: 23px;
+                background-color: rgba(3, 17, 42, 227);
+                border: 2px solid #49cfff;
+                border-radius: 28px;
             }
             QLineEdit {
-                color: #ffffff; background: #102341; padding: 15px;
-                border: 1px solid #37638f; border-radius: 10px;
+                color: #ffffff; background: #102b50; padding: 15px;
+                border: 1px solid #31a9db; border-radius: 10px;
                 font-size: 15px;
             }
             QLineEdit:focus { border: 2px solid #15c9ff; }
             QPushButton {
-                color: #ffffff; background: #036bcb; border: 1px solid #19bbfa;
+                color: #ffffff; background: #047dd9; border: 1px solid #64e6ff;
                 border-radius: 10px; font-size: 15px; font-weight: 700;
                 padding: 16px;
             }
-            QPushButton:hover { background: #078ff0; }
+            QPushButton:hover { background: #05a7f7; }
+            QPushButton:focus { border: 2px solid #d4faff; }
             QPushButton#recovery {
                 background: transparent; color: #76d9ff;
                 font-size: 12px; border: none; padding: 8px;
             }
         """)
         right = QVBoxLayout(panel)
-        right.setContentsMargins(48, 43, 48, 38)
+        right.setContentsMargins(52, 47, 52, 36)
         right.setSpacing(17)
         heading = line("WELCOME TO", 13, "#7ed7ff", True)
         heading.setAlignment(Qt.AlignCenter)
@@ -153,7 +194,7 @@ class BrandedLoginDialog(QDialog):
         caption = line("SECURE BROWSER ACCESS", 12, "#b8d7ef")
         caption.setAlignment(Qt.AlignCenter)
         right.addWidget(caption)
-        right.addSpacing(36)
+        right.addSpacing(48)
 
         for label, secret in fields:
             field_label = line(label.upper(), 12, "#a8c8e6", True)
@@ -190,7 +231,7 @@ class BrandedLoginDialog(QDialog):
             recovery.setObjectName("recovery")
             recovery.clicked.connect(lambda: self.done(2))
             right.addWidget(recovery)
-        right.addSpacing(25)
+        right.addSpacing(37)
         right.addWidget(line("TRIAL LICENSING  •  24h / 72h / custom hours", 12, "#8ebee1"))
         right.addWidget(line(
             "License activation and server recovery will appear after "
