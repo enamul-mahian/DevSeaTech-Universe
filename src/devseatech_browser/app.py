@@ -237,7 +237,8 @@ class Browser(QMainWindow):
     def open_profiles_dashboard(self) -> None:
         """Inspect and open existing profiles without modifying their data."""
         ProfileDashboard(PROFILES_DIR, lambda name: self.add_tab(name),
-                         self, create_profile=self.create_profile).exec()
+                         self, create_profile=self.create_profile,
+                         is_profile_active=lambda name: name in self.profiles).exec()
 
     # ── AF-03 profile health check ───────────────────────────────────
 

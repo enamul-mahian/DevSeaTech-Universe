@@ -7,10 +7,11 @@ from __future__ import annotations
 
 from pathlib import Path
 from devseatech_browser.profile_listing import list_profiles
+from devseatech_browser.backup import create_backup
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget,
+    QDialog, QHBoxLayout, QLabel, QInputDialog, QLineEdit, QMessageBox, QPushButton, QTableWidget,
     QTableWidgetItem, QVBoxLayout,
 )
 
@@ -20,11 +21,12 @@ from PySide6.QtWidgets import (
 class ProfileDashboard(QDialog):
     """First functional iteration of the approved profile management design."""
 
-    def __init__(self, profiles_dir: Path, open_profile, parent=None, create_profile=None):
+    def __init__(self, profiles_dir: Path, open_profile, parent=None, create_profile=None, is_profile_active=None):
         super().__init__(parent)
         self.profiles_dir = profiles_dir
         self.open_profile = open_profile
         self.create_profile = create_profile
+        self.is_profile_active = is_profile_active
         self.setWindowTitle("DevSeaTech Universe — Profiles")
         self.resize(850, 540)
         self.setMinimumSize(640, 400)
@@ -67,6 +69,9 @@ class ProfileDashboard(QDialog):
             create_button = QPushButton("Create Profile")
             create_button.clicked.connect(self.create_new_profile)
             buttons.addWidget(create_button)
+        backup_button = QPushButton("Encrypted Backup")
+        backup_button.clicked.connect(self.backup_selected)
+        buttons.addWidget(backup_button)
         buttons.addStretch()
         self.open_button = QPushButton("Open Selected Profile")
         self.open_button.clicked.connect(self.open_selected)
@@ -119,6 +124,51 @@ class ProfileDashboard(QDialog):
             return
         self.create_profile()
         self.refresh()
+
+    def backup_selected(self):
+        """Create an encrypted snapshot only after the user confirms an inactive profile."""
+        row = self.table.currentRow()
+        if row < 0:
+            QMessageBox.information(self, "Select Profile", "Select a profile to back up.")
+            return
+        item = self.table.item(row, 0)
+        if item is None or item.text() not in list_profiles(self.profiles_dir):
+            QMessageBox.warning(self, "Unavailable", "Selected profile no longer exists.")
+            self.refresh()
+            return
+        name = item.text()
+        if self.is_profile_active is None or self.is_profile_active(name):
+            QMessageBox.warning(
+                self, "Profile In Use",
+                "Cannot back up an open or unverified profile. "
+                "Close all browser tabs for this profile and try again.",
+            )
+            return
+        secret, ok = QInputDialog.getText(
+            self, "Encrypt Profile Backup", "Backup passphrase (12+ characters):",
+            QLineEdit.Password,
+        )
+        if not ok:
+            return
+        if len(secret) < 12:
+            QMessageBox.warning(self, "Weak Passphrase", "Use at least 12 characters.")
+            return
+        try:
+            destination = create_backup(
+                self.profiles_dir / name,
+                self.profiles_dir.parent / "backups" / name,
+                secret,
+            )
+        except (OSError, ValueError, RuntimeError) as exc:
+            QMessageBox.warning(self, "Backup Failed", str(exc))
+            return
+        finally:
+            secret = ""
+        QMessageBox.information(
+            self, "Backup Complete",
+            "Encrypted snapshot saved to:\\n" + str(destination)
+            + "\\nKeep the passphrase safe; it cannot be recovered.",
+        )
 
     def open_selected(self):
         row = self.table.currentRow()
