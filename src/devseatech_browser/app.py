@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from devseatech_browser.login_ui import BrandedLoginDialog
+from devseatech_browser.profile_dashboard import ProfileDashboard
 from devseatech_browser.recovery import archive_preview_auth
 from devseatech_browser.session_restore import (
     TabEntry, save_session, mark_clean, load_session, SAVE_INTERVAL_MS,
@@ -183,6 +184,8 @@ class Browser(QMainWindow):
         new_profile.triggered.connect(self.create_profile)
         settings = toolbar.addAction("Session Settings")
         settings.triggered.connect(self.configure_timer)
+        dashboard = toolbar.addAction("Profiles Dashboard")
+        dashboard.triggered.connect(self.open_profiles_dashboard)
         health = toolbar.addAction("Health Check")
         health.triggered.connect(self.run_health_check)
         self.tabs.currentChanged.connect(self.update_address)
@@ -230,6 +233,10 @@ class Browser(QMainWindow):
     def restore_tabs_from(app_dir: Path) -> list[TabEntry] | None:
         """Return tabs from a previous unclean exit, or None."""
         return load_session(app_dir)
+
+    def open_profiles_dashboard(self) -> None:
+        """Inspect and open existing profiles without modifying their data."""
+        ProfileDashboard(PROFILES_DIR, lambda name: self.add_tab(name), self).exec()
 
     # ── AF-03 profile health check ───────────────────────────────────
 
