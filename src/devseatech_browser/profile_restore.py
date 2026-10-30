@@ -8,7 +8,7 @@ from pathlib import Path
 
 from devseatech_browser.backup import BACKUP_SUFFIX, restore_backup
 
-_NAME = re.compile(r"[A-Za-z0-9_-]{1,40}\\Z")
+_NAME = re.compile(r"[A-Za-z0-9_-]{1,40}\Z")
 
 
 def restore_as_new_profile(backup_path: Path, passphrase: str,
