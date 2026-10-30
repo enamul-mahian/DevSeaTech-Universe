@@ -373,10 +373,12 @@ def main():
     config = setup_or_login()
     if not config:
         return 1
+    # Read crash-recovery state BEFORE constructing Browser. Browser starts
+    # its periodic save loop in __init__, so constructing it first would
+    # overwrite the previous unclean session before we could restore it.
+    saved_tabs = Browser.restore_tabs_from(APP_DIR)
     window = Browser(config)
 
-    # AF-01: offer to restore tabs from an unclean previous exit
-    saved_tabs = Browser.restore_tabs_from(APP_DIR)
     if saved_tabs:
         choice = QMessageBox.question(
             window, "Restore Previous Session",
@@ -384,10 +386,14 @@ def main():
             f"Restore {len(saved_tabs)} tab(s)?",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
         if choice == QMessageBox.Yes:
-            for tab in saved_tabs:
+            # The fresh window opens a default tab. Replace it when restoring
+            # to avoid silently duplicating tabs on every crash recovery.
+            for index, tab in enumerate(saved_tabs):
+                if index == 0 and window.tabs.count() == 1:
+                    window.tabs.removeTab(0)
                 window.add_tab(tab.profile, tab.url)
-    # Clear the unclean marker now that restore was offered
-    mark_clean(APP_DIR)
+    # Persist the user-selected tab set; the next unclean exit can recover it.
+    window._auto_save_session()
 
     window.show()
     return app.exec()
