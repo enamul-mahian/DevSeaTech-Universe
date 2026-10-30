@@ -23,8 +23,9 @@ runtime check) — never on compilation or packaging alone.
 | AF-03 Profile Health Check | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/profile_health.py`; 12 tests in `tests/test_profile_health.py`; checks dir/storage/cache/symlinks/size/cookie-db; non-destructive |
 | AF-04 Engine Compatibility Checker | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/engine_compat.py`; 11 tests in `tests/test_engine_compat.py`; checks Python/PySide6/WebEngine/platform/sandbox/display/disk/schema |
 | AF-05 Download Manager | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/download_manager.py`; 13 tests in `tests/test_download_manager.py`; status tracking, pause/resume/cancel, persistence, risky-extension check, filename sanitization |
+| AF-06 Secure Password Vault | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/password_vault.py`; 13 tests in `tests/test_password_vault.py`; Fernet+scrypt encrypted storage, per-profile vault, add/remove/list/export, lock/unlock |
 
-Verified locally this session: full suite **59/59 pass** (`PYTHONPATH=src python -m unittest discover -s tests`), including AF-02 encryption; offscreen GUI smoke exits 0 and constructs a Qt WebEngine window.
+Verified locally this session: full suite **72/72 pass** (`PYTHONPATH=src python -m unittest discover -s tests`), including AF-02 encryption; offscreen GUI smoke exits 0 and constructs a Qt WebEngine window.
 
 ## Existing baseline (unchanged, preserved)
 - Desktop browser: `src/devseatech_browser/{app,login_ui,recovery,update_policy}.py` — scrypt master/admin auth, per-profile isolation, session timer, branded neon login, fail-closed auto-update logic. 7 original tests still pass.
@@ -40,7 +41,7 @@ Source: `docs/APPROVED-ADDITIONAL-FEATURES.md`. All Spec ✅; implementation per
 | AF-03 | Profile Health Check | **Impl + Unit** |
 | AF-04 | Engine Compatibility Checker | **Impl + Unit** |
 | AF-05 | Download Manager | **Impl + Unit** |
-| AF-06 | Secure Password Vault | Spec |
+| AF-06 | Secure Password Vault | **Impl + Unit** |
 | AF-07 | Profile Import/Export/Clone | Spec |
 | AF-08 | Proxy Health Monitor | Spec |
 | AF-09 | Resource Manager | Spec |
