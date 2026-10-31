@@ -86,24 +86,25 @@ class CosmicBackground(QWidget):
             nb.setColorAt(1.0, QColor(0, 0, 0, 0))
             p.fillRect(self.rect(), nb)
 
-        # ── Large planet (top-right) ──
-        pcx, pcy = w * 0.72, h * 0.12
-        pr = min(w, h) * 0.40
-        pg = QRadialGradient(QPointF(pcx - pr * 0.2, pcy - pr * 0.1), pr * 1.2)
-        pg.setColorAt(0.0, QColor(40, 115, 195, 115))
-        pg.setColorAt(0.35, QColor(22, 75, 155, 90))
-        pg.setColorAt(0.7, QColor(10, 45, 100, 60))
-        pg.setColorAt(1.0, QColor(3, 12, 35, 20))
-        p.setPen(Qt.NoPen); p.setBrush(pg)
-        p.drawEllipse(QPointF(pcx, pcy), pr, pr)
-        # Edge glows
-        for gw, ga in [(1.22, 25), (1.15, 45), (1.08, 30)]:
-            eg = QRadialGradient(QPointF(pcx, pcy), pr * gw)
-            eg.setColorAt(0.80, QColor(0, 0, 0, 0))
-            eg.setColorAt(0.92, QColor(0, 185, 255, ga))
-            eg.setColorAt(1.0, QColor(0, 0, 0, 0))
-            p.setBrush(eg)
-            p.drawEllipse(QPointF(pcx, pcy), pr * gw, pr * gw)
+        # Three mountain layers give depth without external image assets.
+        for i, (base, top, fill) in enumerate((
+            (.82, .49, "#0b2650"),
+            (.91, .58, "#071b38"),
+            (1.03, .69, "#030d24"),
+        )):
+            ridge = QPolygonF([QPointF(0, h)])
+            for j in range(17):
+                x = (j / 16) * w
+                peak = h * (top + .10 * (1 + math.sin(j * (2.17 + i) + i)))
+                peak += h * .065 * math.sin(j * 4.7 + i)
+                ridge.append(QPointF(x, min(h * base, peak)))
+            ridge.append(QPointF(w, h))
+            ridge.append(QPointF(0, h))
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor(fill))
+            painter.drawPolygon(ridge)
+        painter.setPen(QPen(QColor(24, 163, 255, 64), 2))
+        painter.drawLine(0, int(h * .85), w, int(h * .89))
 
         # Stars
         for s in self._stars:

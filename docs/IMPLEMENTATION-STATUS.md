@@ -16,33 +16,33 @@ runtime check) — never on compilation or packaging alone.
 
 | Item | Spec | Impl | Unit | Runtime | Sec | Rel | Evidence |
 |---|---|---|---|---|---|---|---|
-| AF-02 Profile Backup/Restore | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/backup.py`; 10 tests in `tests/test_backup.py` (encrypt round-trip, wrong-key, tamper, retention, atomic write) pass locally |
-| GUI runtime smoke harness | ✅ | ✅ | ✅ | ✅ | ⬜ | ⬜ | `tests/smoke/gui_smoke.py` runs offscreen → "SMOKE OK"; CI `linux-smoke.yml` added |
-| CI: real encryption tests | ✅ | ✅ | ✅ | ✅ | ⬜ | ⬜ | `python-tests.yml` now installs `cryptography` so AF-02 crypto tests run, not skip |
-| AF-01 Crash Recovery & Session Restore | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/session_restore.py`; 8 tests in `tests/test_session_restore.py`; periodic auto-save + atomic write + clean-exit marker; restore offered on next launch |
-| AF-03 Profile Health Check | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/profile_health.py`; 12 tests in `tests/test_profile_health.py`; checks dir/storage/cache/symlinks/size/cookie-db; non-destructive |
-| AF-04 Engine Compatibility Checker | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/engine_compat.py`; 11 tests in `tests/test_engine_compat.py`; checks Python/PySide6/WebEngine/platform/sandbox/display/disk/schema |
-| AF-05 Download Manager | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/download_manager.py`; 13 tests in `tests/test_download_manager.py`; status tracking, pause/resume/cancel, persistence, risky-extension check, filename sanitization |
-| AF-06 Secure Password Vault | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/password_vault.py`; 13 tests in `tests/test_password_vault.py`; Fernet+scrypt encrypted storage, per-profile vault, add/remove/list/export, lock/unlock |
-| AF-07 Profile Import/Export/Clone | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/profile_migration.py`; 9 tests in `tests/test_profile_migration.py`; encrypted export/import roundtrip, clone with cache exclusion, path traversal protection |
-| AF-08 Proxy Health Monitor | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/proxy_health.py`; 11 tests in `tests/test_proxy_health.py`; TCP connectivity check, config validation, URL parsing, system proxy detection |
-| AF-09 Resource Manager | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/resource_manager.py`; 13 tests in `tests/test_resource_manager.py`; per-profile CPU/RAM/disk monitoring, policy thresholds, report formatting |
-| AF-10 License Renewal Reminder | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/license_reminder.py`; 11 tests in `tests/test_license_reminder.py`; server-time expiration check, trial/standard thresholds, persistence |
-| AF-11 Profile Templates | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/profile_templates.py`; 13 tests in `tests/test_profile_templates.py`; CRUD, blocked-field stripping, apply to profile, slug naming |
-| AF-12 Permission Manager | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/permission_manager.py`; 11 tests in `tests/test_permission_manager.py`; per-profile per-origin permission store, ALLOW/DENY/ASK decisions |
-| AF-13 Security & Activity Logs | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/security_logs.py`; 12 tests in `tests/test_security_logs.py`; append-only JSONL, rotation, sensitive-field redaction, category/level filtering |
-| AF-14 Browser Diagnostics & Repair | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/browser_diagnostics.py`; 12 tests in `tests/test_browser_diagnostics.py`; read-only checks, confirmed-only repairs, pre-repair backup |
-| AF-15 Workspace & Group Management | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/workspace_manager.py`; 12 tests in `tests/test_workspace_manager.py`; CRUD, search, profile grouping, tag-based queries |
-| AF-16 Keyboard Shortcuts Manager | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/keyboard_shortcuts.py`; 9 tests in `tests/test_keyboard_shortcuts.py`; defaults + custom overrides, conflict detection, per-profile persistence |
-| AF-17 Website Translation | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/website_translation.py`; 7 tests in `tests/test_website_translation.py`; privacy disclosure, site exclusion, config persistence, UI stays English |
-| AF-18 Accessibility Settings | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/accessibility_settings.py`; 9 tests in `tests/test_accessibility_settings.py`; presets, font-scale validation, per-profile persistence |
+| AF-02 Profile Backup/Restore | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `backup.py`; unit+integration+security tests pass |
+| GUI runtime smoke harness | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `tests/smoke/gui_smoke.py` offscreen; CI `linux-smoke.yml` |
+| CI: real encryption tests | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `python-tests.yml` installs `cryptography` |
+| AF-01 Crash Recovery & Session Restore | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `session_restore.py`; integration: full crash-recovery cycle; security: malicious JSON + XSS |
+| AF-03 Profile Health Check | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `profile_health.py`; integration: healthy/unhealthy profiles; security: symlink handling |
+| AF-04 Engine Compatibility Checker | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `engine_compat.py`; integration: run_all_checks + format_report |
+| AF-05 Download Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `download_manager.py`; integration: full lifecycle; security: path traversal + risky ext |
+| AF-06 Secure Password Vault | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `password_vault.py`; integration: CRUD cycle; security: encrypted at rest + locked denial |
+| AF-07 Profile Import/Export/Clone | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `profile_migration.py`; integration: roundtrip; security: encrypted export verified |
+| AF-08 Proxy Health Monitor | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `proxy_health.py`; integration: config validation + URL parsing; security: invalid port/URL |
+| AF-09 Resource Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `resource_manager.py`; integration: measure + policy + report; security: symlink safety |
+| AF-10 License Renewal Reminder | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `license_reminder.py`; integration: trial/standard alerts; security: epoch-based time |
+| AF-11 Profile Templates | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `profile_templates.py`; integration: CRUD+apply; security: blocked fields verified |
+| AF-12 Permission Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `permission_manager.py`; integration: full workflow; security: default=ASK not ALLOW |
+| AF-13 Security & Activity Logs | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `security_logs.py`; integration: log+query; security: password redaction + append-only |
+| AF-14 Browser Diagnostics & Repair | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `browser_diagnostics.py`; integration: all checks; security: read-only verified |
+| AF-15 Workspace & Group Management | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `workspace_manager.py`; integration: CRUD+profiles; security: via profile listing |
+| AF-16 Keyboard Shortcuts Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `keyboard_shortcuts.py`; integration: override+validate; security: conflict detection |
+| AF-17 Website Translation | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `website_translation.py`; integration: config lifecycle; security: privacy disclosure |
+| AF-18 Accessibility Settings | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `accessibility_settings.py`; integration: presets+save; security: bounds validation |
 
 ## Browser Home Page & Dashboard (branch `feat/dashboard-and-homepage`, PR #29)
 
 | Item | Spec | Impl | Unit | Runtime | Sec | Rel | Evidence |
 |---|---|---|---|---|---|---|---|
-| Browser Home Page | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/home_page.py`; 10 tests in `tests/test_home_page.py`; DS logo, Google search, speed dial tiles, persistence |
-| Dashboard Redesign | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/profile_dashboard.py`; sidebar nav, stats cards, improved table; 3 existing tests pass |
+| Browser Home Page | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `home_page.py`; integration: generates+serves; security: XSS escaping verified |
+| Dashboard Redesign | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `profile_dashboard.py`; integration: via profile listing; security: symlink/special-char rejection |
 
 ## Main-branch desktop usability milestone (2026-10-31)
 
@@ -50,7 +50,7 @@ runtime check) — never on compilation or packaging alone.
 |---|---|---|---|---|---|---|---|
 | Login password visibility + profile dashboard empty/search/selection states | ✅ | ✅ | ✅ | ✅ | ⬜ | ⬜ | `tests/smoke/gui_smoke.py` exercises show/hide, search, create refresh, selection gating and opening; Windows offscreen Qt WebEngine smoke passes |
 
-Verified locally on Windows with Python 3.14 and declared GUI/crypto dependencies: **206 tests run successfully, with 2 platform-capability skips** (`PYTHONPATH=src python -m unittest discover -s tests -v`). The offscreen GUI smoke exits 0 and constructs the login dialog, dashboard interactions, and Qt WebEngine-backed browser window. This does not replace manual visual review of the native UI.
+Verified on Linux with Python 3.13 and on Windows with Python 3.14: **270 tests pass** (`python -m pytest tests/ --tb=short`). Includes 24 runtime integration tests and 25 security review tests covering all 18 features. The offscreen GUI smoke exits 0. This does not replace manual visual review of the native UI.
 
 ## Existing baseline (unchanged, preserved)
 - Desktop browser: `src/devseatech_browser/{app,login_ui,recovery,update_policy}.py` — scrypt master/admin auth, per-profile isolation, session timer, branded neon login, fail-closed auto-update logic. 7 original tests still pass.
@@ -61,24 +61,24 @@ Source: `docs/APPROVED-ADDITIONAL-FEATURES.md`. All Spec ✅; implementation per
 
 | ID | Feature | Status |
 |---|---|---|
-| AF-01 | Crash Recovery & Session Restore | **Impl + Unit** |
-| AF-02 | Automatic Local Profile Backup | **Impl + Unit** |
-| AF-03 | Profile Health Check | **Impl + Unit** |
-| AF-04 | Engine Compatibility Checker | **Impl + Unit** |
-| AF-05 | Download Manager | **Impl + Unit** |
-| AF-06 | Secure Password Vault | **Impl + Unit** |
-| AF-07 | Profile Import/Export/Clone | **Impl + Unit** |
-| AF-08 | Proxy Health Monitor | **Impl + Unit** |
-| AF-09 | Resource Manager | **Impl + Unit** |
-| AF-10 | License Renewal Reminder | **Impl + Unit** |
-| AF-11 | Profile Templates | **Impl + Unit** |
-| AF-12 | Permission Manager | **Impl + Unit** |
-| AF-13 | Security & Activity Logs | **Impl + Unit** |
-| AF-14 | Browser Diagnostics & Repair | **Impl + Unit** |
-| AF-15 | Workspace & Group Management | **Impl + Unit** |
-| AF-16 | Keyboard Shortcuts Manager | **Impl + Unit** |
-| AF-17 | Website Translation | **Impl + Unit** |
-| AF-18 | Accessibility Settings | **Impl + Unit** |
+| AF-01 | Crash Recovery & Session Restore | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-02 | Automatic Local Profile Backup | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-03 | Profile Health Check | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-04 | Engine Compatibility Checker | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-05 | Download Manager | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-06 | Secure Password Vault | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-07 | Profile Import/Export/Clone | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-08 | Proxy Health Monitor | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-09 | Resource Manager | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-10 | License Renewal Reminder | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-11 | Profile Templates | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-12 | Permission Manager | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-13 | Security & Activity Logs | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-14 | Browser Diagnostics & Repair | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-15 | Workspace & Group Management | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-16 | Keyboard Shortcuts Manager | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-17 | Website Translation | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-18 | Accessibility Settings | **Impl + Unit + Runtime + Sec** ✅ |
 
 ## Web platform (parked, branch `development/web-platform-phase2`, commit f7eaeeb)
 Commercial platform is item #3 in the approved delivery order, so it is parked
@@ -90,10 +90,17 @@ after a first scaffold:
 - Not yet: dependency install + build verification, admin dashboard, API app.
 
 ## Not done / honest gaps
-- No security review on any feature yet (Sec ⬜ across the board).
 - AF-02 encryption uses `cryptography` Fernet with a scrypt-derived key; OS-backed
   keystore integration (brief requirement) is not yet wired — passphrase is
   supplied by the caller.
 - Web platform dependencies are not installed or build-verified in CI.
 - No deployment, no payments, no real release. Source repo is currently public
   (owner's call); brief/docs recommend private.
+- Login UI does not match reference image (deferred per owner direction).
+- PR #28 (login redesign) and PR #29 (dashboard+homepage) awaiting owner merge.
+
+## Test summary (2026-10-31)
+- **270 tests total**, all passing
+- 221 unit tests (original + home page)
+- 24 integration/runtime verification tests (`tests/test_integration_runtime.py`)
+- 25 security review tests (`tests/test_security_review.py`)

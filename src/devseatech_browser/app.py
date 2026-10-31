@@ -152,6 +152,9 @@ def setup_or_login() -> dict | None:
         if verify_password(dialog.values()["Master password"], config["master"]):
             return config
         QMessageBox.warning(None, "Access denied", "Incorrect master password.")
+    QMessageBox.critical(None, "Locked Out",
+                         "Too many failed attempts. The browser will close.\n"
+                         "Use 'Reset preview access' on the login screen to reset.")
     return None
 
 
@@ -283,7 +286,10 @@ class Browser(QMainWindow):
         view.urlChanged.connect(lambda _url, v=view: self.update_view_address(v))
         self.tabs.setCurrentIndex(index)
         if not url:
-            url = get_home_page_url()
+            try:
+                url = get_home_page_url()
+            except Exception:
+                url = "https://www.google.com"
         view.setUrl(QUrl(url))
 
     def set_tab_title(self, view, profile, title):
@@ -295,7 +301,11 @@ class Browser(QMainWindow):
         """Navigate current tab to the home page."""
         view = self.tabs.currentWidget()
         if view:
-            view.setUrl(QUrl(get_home_page_url()))
+            try:
+                url = get_home_page_url()
+            except Exception:
+                url = "https://www.google.com"
+            view.setUrl(QUrl(url))
 
     def current_action(self, method):
         view = self.tabs.currentWidget()
