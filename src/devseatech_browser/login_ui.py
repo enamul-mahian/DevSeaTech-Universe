@@ -9,238 +9,210 @@ from __future__ import annotations
 import math
 import random
 import sys
-from PySide6.QtCore import Qt, QTimer, QPointF, QRectF, QSize
+from PySide6.QtCore import Qt, QTimer, QPointF, QRectF
 from PySide6.QtGui import (QColor, QLinearGradient, QPainter, QPainterPath,
                           QPen, QPolygonF, QRadialGradient, QFont, QBrush,
-                          QIcon, QPixmap)
+                          QPixmap)
 from PySide6.QtWidgets import (
     QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QVBoxLayout, QWidget, QStyle, QGraphicsDropShadowEffect,
-    QSizePolicy, QApplication,
+    QSizePolicy,
 )
 
 
-# ─── Colour palette ─────────────────────────────────────────────────
+# ─── Palette ─────────────────────────────────────────────────────────
+_CYAN = "#00d4ff"
+_CYAN_MID = "#00a8d6"
 _DEEP = "#020a1a"
-_ACCENT = "#00d4ff"
-_ACCENT_GLOW = "#00b8e6"
 _TEXT = "#e8f4ff"
-_TEXT_DIM = "#7da4be"
-_CARD_BG = "rgba(4, 14, 36, 230)"
-_INPUT_BG = "#081c38"
-_INPUT_BORDER = "#164060"
+_DIM = "#7da4be"
 
 
 class _Star:
-    __slots__ = ('x_frac', 'y_frac', 'size', 'phase', 'base_alpha')
+    __slots__ = ('xf', 'yf', 'sz', 'ph', 'ba')
     def __init__(self):
-        self.x_frac = random.random()
-        self.y_frac = random.random() * 0.7  # stars only in upper 70%
-        self.size = random.choice([0.6, 0.8, 1.0, 1.2, 1.5, 2.0])
-        self.phase = random.uniform(0, math.tau)
-        self.base_alpha = random.randint(80, 220)
+        self.xf = random.random()
+        self.yf = random.random() * 0.72
+        self.sz = random.choice([0.6, 0.8, 1.0, 1.2, 1.6, 2.2])
+        self.ph = random.uniform(0, math.tau)
+        self.ba = random.randint(70, 230)
 
 
 class CosmicBackground(QWidget):
-    """Rich animated cosmic background matching the premium reference."""
-
+    """Rich animated cosmic background with large planet."""
     def __init__(self, parent=None):
         super().__init__(parent)
         self.tick = 0
-        self._stars = [_Star() for _ in range(280)]
+        self._stars = [_Star() for _ in range(300)]
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self._advance)
+        self.timer.timeout.connect(self._adv)
         self.timer.start(50)
 
-    def _advance(self):
+    def _adv(self):
         self.tick = (self.tick + 1) % 7200
         self.update()
 
-    def paintEvent(self, event):
+    def paintEvent(self, _):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
         w, h = max(1, self.width()), max(1, self.height())
         t = self.tick
 
-        # ── Deep space gradient ──
+        # Sky gradient
         sky = QLinearGradient(0, 0, w * 0.4, h)
         sky.setColorAt(0.0, QColor("#010510"))
-        sky.setColorAt(0.25, QColor("#041228"))
-        sky.setColorAt(0.5, QColor("#071a3a"))
-        sky.setColorAt(0.75, QColor("#051530"))
-        sky.setColorAt(1.0, QColor("#020812"))
+        sky.setColorAt(0.3, QColor("#061a34"))
+        sky.setColorAt(0.6, QColor("#091830"))
+        sky.setColorAt(1.0, QColor("#020810"))
         p.fillRect(self.rect(), sky)
 
-        # ── Large nebula — upper center-right ──
-        neb = QRadialGradient(QPointF(w * 0.65, h * 0.15), w * 0.55)
-        neb.setColorAt(0.0, QColor(0, 80, 180, 55))
-        neb.setColorAt(0.25, QColor(0, 50, 140, 35))
-        neb.setColorAt(0.5, QColor(5, 30, 90, 18))
-        neb.setColorAt(1.0, QColor(0, 0, 0, 0))
-        p.fillRect(self.rect(), neb)
+        # Nebulae (ambient glow areas)
+        for cx, cy, rad, r, g, b, a in [
+            (0.70, 0.12, 0.60, 0, 100, 220, 70),
+            (0.20, 0.06, 0.35, 15, 50, 140, 40),
+            (0.50, 0.50, 0.30, 5, 25, 90, 25),
+        ]:
+            nb = QRadialGradient(QPointF(w * cx, h * cy), w * rad)
+            nb.setColorAt(0.0, QColor(r, g, b, a))
+            nb.setColorAt(0.5, QColor(r // 2, g // 2, b // 2, a // 3))
+            nb.setColorAt(1.0, QColor(0, 0, 0, 0))
+            p.fillRect(self.rect(), nb)
 
-        # ── Secondary nebula — upper left (deep blue) ──
-        neb2 = QRadialGradient(QPointF(w * 0.2, h * 0.1), w * 0.35)
-        neb2.setColorAt(0.0, QColor(10, 40, 120, 40))
-        neb2.setColorAt(0.5, QColor(5, 20, 70, 15))
-        neb2.setColorAt(1.0, QColor(0, 0, 0, 0))
-        p.fillRect(self.rect(), neb2)
-
-        # ── Large planet (right side) ──
-        planet_cx = w * 0.78
-        planet_cy = h * 0.22
-        planet_r = min(w, h) * 0.22
+        # ── BIG PLANET (top-right, partially behind mountains) ──
+        pcx, pcy = w * 0.72, h * 0.15
+        pr = min(w, h) * 0.38  # MUCH bigger planet
         # Planet body
-        pg = QRadialGradient(
-            QPointF(planet_cx - planet_r * 0.25, planet_cy - planet_r * 0.2),
-            planet_r * 1.3)
-        pg.setColorAt(0.0, QColor(30, 90, 160, 90))
-        pg.setColorAt(0.4, QColor(15, 55, 120, 70))
-        pg.setColorAt(0.7, QColor(8, 30, 80, 50))
-        pg.setColorAt(1.0, QColor(3, 10, 30, 20))
-        p.setPen(Qt.NoPen)
-        p.setBrush(pg)
-        p.drawEllipse(QPointF(planet_cx, planet_cy), planet_r, planet_r)
-        # Planet edge glow
-        edge_glow = QRadialGradient(QPointF(planet_cx, planet_cy), planet_r * 1.15)
-        edge_glow.setColorAt(0.85, QColor(0, 0, 0, 0))
-        edge_glow.setColorAt(0.92, QColor(0, 160, 255, 40))
-        edge_glow.setColorAt(1.0, QColor(0, 0, 0, 0))
-        p.setBrush(edge_glow)
-        p.drawEllipse(QPointF(planet_cx, planet_cy),
-                      planet_r * 1.15, planet_r * 1.15)
-        # Atmospheric ring
-        p.setPen(QPen(QColor(60, 180, 240, 30), 1.5))
+        pg = QRadialGradient(QPointF(pcx - pr * 0.25, pcy - pr * 0.15), pr * 1.2)
+        pg.setColorAt(0.0, QColor(40, 120, 200, 120))
+        pg.setColorAt(0.3, QColor(25, 80, 160, 100))
+        pg.setColorAt(0.6, QColor(12, 50, 110, 80))
+        pg.setColorAt(1.0, QColor(3, 15, 40, 30))
+        p.setPen(Qt.NoPen); p.setBrush(pg)
+        p.drawEllipse(QPointF(pcx, pcy), pr, pr)
+        # Bright edge glow
+        for gw, ga in [(1.25, 30), (1.18, 50), (1.12, 35)]:
+            eg = QRadialGradient(QPointF(pcx, pcy), pr * gw)
+            eg.setColorAt(0.78, QColor(0, 0, 0, 0))
+            eg.setColorAt(0.90, QColor(0, 190, 255, ga))
+            eg.setColorAt(1.0, QColor(0, 0, 0, 0))
+            p.setBrush(eg)
+            p.drawEllipse(QPointF(pcx, pcy), pr * gw, pr * gw)
+        # Ring
+        p.setPen(QPen(QColor(80, 200, 255, 40), 2.0))
         p.setBrush(Qt.NoBrush)
-        p.drawEllipse(QPointF(planet_cx, planet_cy),
-                      planet_r * 1.8, planet_r * 0.4)
+        p.drawEllipse(QPointF(pcx, pcy), pr * 2.0, pr * 0.45)
 
-        # ── Stars ──
+        # Stars
         for s in self._stars:
-            x = s.x_frac * w
-            y = s.y_frac * h
-            twinkle = 0.5 + 0.5 * math.sin(t * 0.05 + s.phase)
-            alpha = int(s.base_alpha * (0.3 + 0.7 * twinkle))
+            tw = 0.5 + 0.5 * math.sin(t * 0.05 + s.ph)
+            a = int(s.ba * (0.3 + 0.7 * tw))
             p.setPen(Qt.NoPen)
-            p.setBrush(QColor(200, 230, 255, alpha))
-            p.drawEllipse(QPointF(x, y), s.size, s.size)
+            p.setBrush(QColor(210, 235, 255, a))
+            p.drawEllipse(QPointF(s.xf * w, s.yf * h), s.sz, s.sz)
 
-        # ── Mountain silhouettes (4 layers for depth) ──
-        mtn_data = [
-            (0.72, 0.46, QColor(12, 35, 70, 200), 1.9, 0.09),
-            (0.80, 0.54, QColor(8, 25, 55, 220), 2.5, 0.08),
-            (0.88, 0.63, QColor(5, 18, 40, 240), 3.1, 0.07),
-            (1.01, 0.74, QColor(3, 10, 25, 255), 1.3, 0.06),
-        ]
-        for base_y, peak_y, color, freq, amp in mtn_data:
+        # Mountains (4 layers — taller, more dramatic)
+        for by, py_, col, fr, amp in [
+            (0.70, 0.40, QColor(18, 45, 85, 210), 1.9, 0.12),
+            (0.78, 0.50, QColor(12, 32, 65, 230), 2.5, 0.10),
+            (0.86, 0.60, QColor(6, 22, 48, 245), 3.1, 0.08),
+            (1.02, 0.74, QColor(3, 12, 28, 255), 1.3, 0.06),
+        ]:
             poly = QPolygonF([QPointF(0, h)])
-            segs = 32
-            for j in range(segs + 1):
-                x = (j / segs) * w
-                y_val = h * (peak_y
-                             + amp * math.sin(j * 0.6 + freq)
-                             + amp * 0.6 * math.sin(j * 1.4 + freq * 1.7)
-                             + amp * 0.3 * math.sin(j * 3.2 + freq * 0.5))
-                poly.append(QPointF(x, min(h * base_y, y_val)))
-            poly.append(QPointF(w, h))
-            poly.append(QPointF(0, h))
-            p.setPen(Qt.NoPen)
-            p.setBrush(color)
+            for j in range(41):
+                x = (j / 40) * w
+                yv = h * (py_ + amp * math.sin(j * 0.5 + fr)
+                          + amp * 0.6 * math.sin(j * 1.3 + fr * 1.7)
+                          + amp * 0.3 * math.sin(j * 2.8 + fr * 0.5))
+                poly.append(QPointF(x, min(h * by, yv)))
+            poly.append(QPointF(w, h)); poly.append(QPointF(0, h))
+            p.setPen(Qt.NoPen); p.setBrush(col)
             p.drawPolygon(poly)
 
-        # ── Water/lake reflection at bottom ──
-        water_y = h * 0.82
-        water = QLinearGradient(0, water_y, 0, h)
-        water.setColorAt(0.0, QColor(5, 25, 60, 100))
-        water.setColorAt(0.3, QColor(3, 18, 45, 140))
-        water.setColorAt(1.0, QColor(2, 10, 25, 180))
-        p.fillRect(QRectF(0, water_y, w, h - water_y), water)
-        # Reflection shimmer lines
-        for i in range(8):
-            ry = water_y + 10 + i * ((h - water_y - 10) / 8)
-            rx = w * (0.3 + 0.05 * math.sin(t * 0.03 + i * 0.7))
-            rw = w * (0.1 + 0.05 * math.sin(t * 0.02 + i * 1.3))
-            alpha = int(20 + 15 * math.sin(t * 0.04 + i))
-            p.setPen(QPen(QColor(0, 180, 255, alpha), 1))
+        # Water reflection
+        wy = h * 0.82
+        wg = QLinearGradient(0, wy, 0, h)
+        wg.setColorAt(0.0, QColor(5, 30, 70, 120))
+        wg.setColorAt(0.4, QColor(3, 20, 55, 160))
+        wg.setColorAt(1.0, QColor(2, 12, 32, 200))
+        p.fillRect(QRectF(0, wy, w, h - wy), wg)
+        # Shimmer lines on water
+        for i in range(12):
+            ry = wy + 6 + i * ((h - wy - 6) / 12)
+            rx = w * (0.15 + 0.08 * math.sin(t * 0.025 + i * 0.8))
+            rw = w * (0.10 + 0.06 * math.sin(t * 0.02 + i * 1.4))
+            al = int(25 + 20 * math.sin(t * 0.035 + i))
+            p.setPen(QPen(QColor(0, 200, 255, al), 1.2))
             p.drawLine(QPointF(rx, ry), QPointF(rx + rw, ry))
 
-        # ── Horizon glow ──
-        hg = QLinearGradient(0, water_y - 20, 0, water_y + 20)
-        hg.setColorAt(0.0, QColor(0, 0, 0, 0))
-        hg.setColorAt(0.5, QColor(0, 150, 220, 35))
-        hg.setColorAt(1.0, QColor(0, 0, 0, 0))
-        p.fillRect(QRectF(0, water_y - 20, w, 40), hg)
+        # Horizon glow
+        hg = QLinearGradient(0, wy - 20, 0, wy + 20)
+        hg.setColorAt(0, QColor(0, 0, 0, 0))
+        hg.setColorAt(0.5, QColor(0, 170, 240, 50))
+        hg.setColorAt(1, QColor(0, 0, 0, 0))
+        p.fillRect(QRectF(0, wy - 20, w, 40), hg)
 
-        # ── Shooting stars ──
+        # Shooting stars
         for i in range(3):
-            speed = 2.0 + i * 1.5
-            length = 100 + i * 30
-            sx = (t * speed + i * 900) % (w + 600) - 300
-            sy = h * (0.06 + i * 0.15) + sx * 0.05
-            alpha = max(0, min(140, 140 - abs(sx - w * 0.5) // 4))
-            if alpha > 8:
-                trail_grad = QLinearGradient(
-                    QPointF(sx, sy),
-                    QPointF(sx - length, sy + length * 0.25))
-                trail_grad.setColorAt(0.0, QColor(200, 240, 255, alpha))
-                trail_grad.setColorAt(1.0, QColor(200, 240, 255, 0))
-                p.setPen(QPen(trail_grad, 1.5))
-                p.drawLine(QPointF(sx, sy),
-                           QPointF(sx - length, sy + length * 0.25))
+            sp = 2.2 + i * 1.4
+            ln = 120 + i * 30
+            sx = (t * sp + i * 950) % (w + 500) - 250
+            sy = h * (0.04 + i * 0.12) + sx * 0.04
+            al = max(0, min(160, 160 - abs(sx - w * 0.5) // 4))
+            if al > 10:
+                tg = QLinearGradient(QPointF(sx, sy), QPointF(sx - ln, sy + ln * 0.2))
+                tg.setColorAt(0.0, QColor(210, 245, 255, al))
+                tg.setColorAt(1.0, QColor(210, 245, 255, 0))
+                p.setPen(QPen(tg, 2.0)); p.drawLine(QPointF(sx, sy), QPointF(sx - ln, sy + ln * 0.2))
 
         p.end()
 
 
-def _text(text, size=14, color=_TEXT, bold=False):
-    """Create a styled label."""
+def _lbl(text, size=14, color=_TEXT, bold=False):
     lbl = QLabel(text)
     lbl.setWordWrap(True)
-    weight = "700" if bold else "400"
     lbl.setStyleSheet(
-        f"background: transparent; border: 0; color: {color}; "
-        f"font-size: {size}px; font-weight: {weight};")
+        f"background:transparent;border:0;color:{color};"
+        f"font-size:{size}px;font-weight:{'700' if bold else '400'};")
     return lbl
 
 
-def _icon_circle(icon_char: str, size: int = 44):
-    """Create a circle badge with an icon character."""
-    badge = QLabel(icon_char)
-    badge.setFixedSize(size, size)
-    badge.setAlignment(Qt.AlignCenter)
-    badge.setStyleSheet(
-        f"background: rgba(0, 180, 230, 0.10); "
-        f"border: 1.5px solid rgba(0, 180, 230, 0.35); "
-        f"border-radius: {size // 2}px; "
-        f"color: {_ACCENT}; font-size: {size // 2 - 2}px;")
-    return badge
+def _circle_icon(char: str, sz: int = 64):
+    """Large circle icon badge with border."""
+    b = QLabel(char)
+    b.setFixedSize(sz, sz)
+    b.setAlignment(Qt.AlignCenter)
+    b.setStyleSheet(
+        f"background:rgba(0,180,230,0.12);"
+        f"border:2px solid rgba(0,180,230,0.45);"
+        f"border-radius:{sz // 2}px;"
+        f"color:{_CYAN};font-size:{sz * 2 // 5}px;")
+    return b
 
 
-class _NeonFrame(QFrame):
-    """Frame with painted neon glow border."""
-
-    def __init__(self, glow_color=QColor(0, 180, 255, 80), parent=None):
+class _GlowCard(QFrame):
+    """Card with BRIGHT multi-layer neon glow border — matches reference."""
+    def __init__(self, intensity=1.0, parent=None):
         super().__init__(parent)
-        self._glow = glow_color
+        self._intensity = intensity
 
     def paintEvent(self, event):
         super().paintEvent(event)
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
-        r = 18
-        rect = QRectF(self.rect()).adjusted(3, 3, -3, -3)
-        # Outer glow layers
-        for i, (spread, alpha) in enumerate([
-            (6, 18), (4, 30), (2, 50), (1, 80)
-        ]):
-            c = QColor(self._glow)
-            c.setAlpha(alpha)
-            p.setPen(QPen(c, spread))
+        rect = QRectF(self.rect()).adjusted(6, 6, -6, -6)
+        r = 16
+        # Glow layers — outer diffuse to inner bright (MUCH brighter than before)
+        layers = [
+            (16, 18), (12, 30), (9, 45), (6, 70),
+            (4, 100), (2.5, 140), (1.5, 180),
+        ]
+        for width, alpha in layers:
+            a = int(alpha * self._intensity)
+            p.setPen(QPen(QColor(0, 200, 255, a), width))
             p.setBrush(Qt.NoBrush)
             p.drawRoundedRect(rect, r, r)
-        # Bright inner border
-        c = QColor(self._glow)
-        c.setAlpha(120)
-        p.setPen(QPen(c, 1.5))
+        # Very bright inner edge — almost white-cyan
+        p.setPen(QPen(QColor(120, 230, 255, int(220 * self._intensity)), 1.8))
         p.drawRoundedRect(rect, r, r)
         p.end()
 
@@ -253,334 +225,312 @@ class BrandedLoginDialog(QDialog):
         self.setWindowTitle("DevSeaTech Universe — " + title)
         self.setWindowIcon(self.style().standardIcon(
             QStyle.StandardPixmap.SP_ComputerIcon))
-        self.resize(1340, 820)
-        self.setMinimumSize(1020, 660)
+        self.resize(1420, 880)
+        self.setMinimumSize(1060, 700)
         self.inputs: dict[str, QLineEdit] = {}
-        self.setStyleSheet("QDialog { background: #010714; }")
-
-        bg = CosmicBackground(self)
-        shell = QHBoxLayout(bg)
-        shell.setContentsMargins(52, 40, 44, 32)
-        shell.setSpacing(40)
+        self.setStyleSheet("QDialog{background:#010714;}")
 
         is_login = title == "Master Login"
         is_setup = title == "First-Time Setup"
 
-        # ═══════════════════════════════════════════════════
-        #  LEFT SIDE — Brand, tagline, features, contact
-        # ═══════════════════════════════════════════════════
+        bg = CosmicBackground(self)
+        shell = QHBoxLayout(bg)
+        shell.setContentsMargins(55, 40, 48, 30)
+        shell.setSpacing(40)
+
+        # ═══════════════════════════════════════
+        #  LEFT — Brand + features + contact
+        # ═══════════════════════════════════════
         left = QVBoxLayout()
-        left.setSpacing(6)
+        left.setSpacing(4)
 
-        # ── Logo area ──
-        logo_text = QLabel("DevSeaTech")
-        logo_font = QFont()
-        logo_font.setPixelSize(42)
-        logo_font.setBold(True)
-        logo_text.setFont(logo_font)
-        logo_text.setStyleSheet(
-            "background: transparent; border: 0; color: #ffffff;")
-        left.addWidget(logo_text)
+        # ── Logo text (BIG) ──
+        logo = QLabel("DevSeaTech")
+        lf = QFont(); lf.setPixelSize(68); lf.setBold(True)
+        logo.setFont(lf)
+        logo.setStyleSheet("background:transparent;border:0;color:#ffffff;")
+        left.addWidget(logo)
 
-        universe_lbl = _text("Universe", 22, _ACCENT, True)
-        left.addWidget(universe_lbl)
-
-        left.addSpacing(16)
-
-        # Tagline
-        left.addWidget(_text("Your secure digital workspace", 20,
-                             "#ffffff", True))
-        left.addSpacing(4)
-        left.addWidget(_text(
-            "Multi-profile browsing with centralized administration\n"
-            "and flexible licensing.", 13, _TEXT_DIM))
+        uni = QLabel("Universe")
+        uf = QFont(); uf.setPixelSize(38); uf.setBold(True)
+        uni.setFont(uf)
+        uni.setStyleSheet(f"background:transparent;border:0;color:{_CYAN};")
+        left.addWidget(uni)
 
         left.addSpacing(20)
 
-        # ── Feature list with circle icons ──
-        features = [
-            ("🛡", "Secure Browsing",
+        # Tagline (bigger)
+        tag = QLabel("Your secure digital workspace")
+        tf = QFont(); tf.setPixelSize(26); tf.setBold(True)
+        tag.setFont(tf)
+        tag.setStyleSheet("background:transparent;border:0;color:#ffffff;")
+        tag.setWordWrap(True)
+        left.addWidget(tag)
+        left.addSpacing(5)
+        left.addWidget(_lbl(
+            "Multi-profile browsing with centralized administration\n"
+            "and flexible licensing.", 15, _DIM))
+
+        left.addSpacing(24)
+
+        # Features with LARGE circle icons
+        feats = [
+            ("\U0001f6e1", "Secure Browsing",
              "Protect browsing data and user access."),
-            ("👥", "Multi-Profile System",
+            ("\U0001f465", "Multi-Profile System",
              "Isolated cookies, cache and sessions."),
             ("⚙", "Engine Management",
              "Multi-version runtime support: planned."),
-            ("🌐", "Proxies & Privacy",
+            ("\U0001f310", "Proxies & Privacy",
              "HTTP, HTTPS and SOCKS5: planned."),
             ("⏱", "Session Time Control",
              "Administrator-managed sessions."),
         ]
-        for icon_ch, heading, detail in features:
+        for ico, head, det in feats:
             row = QHBoxLayout()
-            row.setSpacing(14)
+            row.setSpacing(18)
             row.setContentsMargins(0, 0, 0, 0)
-            row.addWidget(_icon_circle(icon_ch, 42), 0, Qt.AlignTop)
-            col = QVBoxLayout()
-            col.setSpacing(1)
-            col.addWidget(_text(heading, 14, "#e4f0ff", True))
-            col.addWidget(_text(detail, 11, _TEXT_DIM))
+            row.addWidget(_circle_icon(ico, 64), 0, Qt.AlignVCenter)
+            col = QVBoxLayout(); col.setSpacing(2)
+            col.addWidget(_lbl(head, 20, "#e8f4ff", True))
+            col.addWidget(_lbl(det, 14, _DIM))
             row.addLayout(col, 1)
             left.addLayout(row)
-            left.addSpacing(6)
+            left.addSpacing(10)
 
         left.addStretch(1)
 
-        # ── Contact info panel ──
-        contact = _NeonFrame(QColor(0, 160, 220, 50))
+        # Contact panel with neon border (brighter)
+        contact = _GlowCard(0.6)
         contact.setStyleSheet(
-            "QFrame { background: rgba(4, 16, 40, 200); "
-            "border-radius: 14px; }")
-        contact_layout = QVBoxLayout(contact)
-        contact_layout.setContentsMargins(20, 14, 20, 14)
-        contact_layout.setSpacing(5)
-        contact_layout.addWidget(_text("CONTACT INFORMATION", 10,
-                                       _ACCENT, True))
-        contact_layout.addSpacing(4)
-        for icon, info in [
+            "QFrame{background:rgba(4,16,42,215);border-radius:14px;}")
+        cl = QVBoxLayout(contact)
+        cl.setContentsMargins(24, 18, 24, 18)
+        cl.setSpacing(8)
+        cl.addWidget(_lbl("CONTACT INFORMATION", 13, _CYAN, True))
+        cl.addSpacing(4)
+        for sym, info in [
             ("✉", "devseatech60@gmail.com"),
             ("☎", "+8801805839123"),
             ("⊕", "www.devseatech.com"),
         ]:
-            info_row = QHBoxLayout()
-            info_row.setSpacing(10)
-            icon_lbl = _text(icon, 13, _ACCENT)
-            icon_lbl.setFixedWidth(20)
-            info_row.addWidget(icon_lbl)
-            info_row.addWidget(_text(info, 12, "#c0d8ed"))
-            info_row.addStretch()
-            contact_layout.addLayout(info_row)
+            r = QHBoxLayout(); r.setSpacing(14)
+            ic = _lbl(sym, 17, _CYAN); ic.setFixedWidth(26)
+            r.addWidget(ic)
+            r.addWidget(_lbl(info, 15, "#c8dced"))
+            r.addStretch()
+            cl.addLayout(r)
         left.addWidget(contact)
 
-        shell.addLayout(left, 48)
+        shell.addLayout(left, 44)
 
-        # ═══════════════════════════════════════════════════
-        #  RIGHT SIDE — Auth card with neon glow
-        # ═══════════════════════════════════════════════════
-        right_col = QVBoxLayout()
-        right_col.addStretch(1)
+        # ═══════════════════════════════════════
+        #  RIGHT — Auth card with BRIGHT neon glow
+        # ═══════════════════════════════════════
+        rc = QVBoxLayout()
+        rc.addStretch(1)
 
-        card = _NeonFrame(QColor(0, 180, 255, 90))
-        card.setObjectName("authCard")
-        card.setMaximumWidth(480)
-        card.setMinimumWidth(380)
+        card = _GlowCard(1.0)
+        card.setObjectName("ac")
+        card.setMaximumWidth(560)
+        card.setMinimumWidth(420)
         card.setStyleSheet(f"""
-            QFrame#authCard {{
-                background-color: {_CARD_BG};
-                border-radius: 18px;
+            QFrame#ac {{
+                background-color: rgba(4, 14, 38, 235);
+                border-radius: 16px;
             }}
             QLineEdit {{
-                color: #ffffff;
-                background: {_INPUT_BG};
-                padding: 13px 16px 13px 14px;
-                min-height: 22px;
-                border: 1px solid {_INPUT_BORDER};
-                border-radius: 10px;
-                font-size: 14px;
-                selection-background-color: #0077cc;
+                color:#fff; background:#081c38;
+                padding:16px 18px 16px 42px; min-height:28px;
+                border:1.5px solid #1a4a6e; border-radius:10px;
+                font-size:16px;
+                selection-background-color:#0077cc;
             }}
-            QLineEdit:focus {{
-                border: 1.5px solid {_ACCENT};
+            QLineEdit:focus {{ border:2px solid {_CYAN}; }}
+            QLineEdit::placeholder {{ color:#3d6080; }}
+            QPushButton#submit {{
+                color:#fff;
+                background:qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                    stop:0 #0088cc,stop:0.5 #00bbdd,stop:1 #00ddee);
+                border:none; border-radius:10px;
+                font-size:19px; font-weight:700; padding:18px;
             }}
-            QLineEdit::placeholder {{
-                color: #3d6080;
+            QPushButton#submit:hover {{
+                background:qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                    stop:0 #009de0,stop:0.5 #00ccee,stop:1 #00eeff);
             }}
-            QPushButton#loginSubmit {{
-                color: #ffffff;
-                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 #0088cc, stop:0.5 #00bbdd, stop:1 #00ccee);
-                border: none;
-                border-radius: 10px;
-                font-size: 16px;
-                font-weight: 700;
-                padding: 15px;
+            QPushButton#submit:pressed {{ background:#0077bb; }}
+            QPushButton#vis {{
+                background:rgba(0,160,220,0.08);
+                border:1.5px solid rgba(0,160,220,0.35);
+                border-radius:10px; color:{_CYAN};
+                font-size:15px; font-weight:600;
+                padding:16px 20px;
             }}
-            QPushButton#loginSubmit:hover {{
-                background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 #0099dd, stop:0.5 #00ccee, stop:1 #00ddff);
+            QPushButton#vis:hover {{ background:rgba(0,160,220,0.18); }}
+            QPushButton#link {{
+                background:transparent; color:{_CYAN};
+                font-size:14px; border:none; padding:4px;
+                text-decoration:underline;
             }}
-            QPushButton#loginSubmit:pressed {{
-                background: #0077bb;
-            }}
-            QPushButton#passwordVisibility {{
-                background: rgba(0, 160, 220, 0.08);
-                border: 1px solid rgba(0, 160, 220, 0.30);
-                border-radius: 10px;
-                color: {_ACCENT};
-                font-size: 13px;
-                font-weight: 600;
-                padding: 13px 16px;
-            }}
-            QPushButton#passwordVisibility:hover {{
-                background: rgba(0, 160, 220, 0.18);
-            }}
-            QPushButton#linkBtn {{
-                background: transparent;
-                color: {_ACCENT};
-                font-size: 12px;
-                border: none;
-                padding: 4px;
-                text-decoration: underline;
-            }}
-            QPushButton#linkBtn:hover {{
-                color: #40e8ff;
-            }}
+            QPushButton#link:hover {{ color:#50eeff; }}
         """)
 
-        # Glow shadow
+        # Strong outer glow shadow
         glow = QGraphicsDropShadowEffect()
-        glow.setBlurRadius(80)
-        glow.setColor(QColor(0, 140, 220, 40))
+        glow.setBlurRadius(120)
+        glow.setColor(QColor(0, 180, 255, 70))
         glow.setOffset(0, 0)
         card.setGraphicsEffect(glow)
 
-        form = QVBoxLayout(card)
-        form.setContentsMargins(40, 36, 40, 28)
-        form.setSpacing(8)
+        fm = QVBoxLayout(card)
+        fm.setContentsMargins(48, 42, 48, 34)
+        fm.setSpacing(6)
 
-        # Card header
-        form.addWidget(_text("WELCOME TO", 11, _TEXT_DIM, True))
-        form.addSpacing(2)
+        # "WELCOME TO" — bigger
+        wt = _lbl("WELCOME TO", 15, _DIM, True)
+        wt.setAlignment(Qt.AlignCenter)
+        fm.addWidget(wt)
+        fm.addSpacing(6)
 
-        card_title = QLabel("DevSeaTech Universe")
-        title_font = QFont()
-        title_font.setPixelSize(30)
-        title_font.setBold(True)
-        card_title.setFont(title_font)
-        card_title.setStyleSheet(
-            "background: transparent; border: 0; color: #ffffff;")
-        card_title.setAlignment(Qt.AlignCenter)
-        form.addWidget(card_title)
+        # "DevSeaTech Universe" — LARGE centered (matching reference ~50px)
+        ct = QLabel("DevSeaTech Universe")
+        ctf = QFont(); ctf.setPixelSize(48); ctf.setBold(True)
+        ct.setFont(ctf)
+        ct.setStyleSheet("background:transparent;border:0;color:#ffffff;")
+        ct.setAlignment(Qt.AlignCenter)
+        ct.setWordWrap(True)
+        fm.addWidget(ct)
+        fm.addSpacing(4)
 
-        form.addSpacing(2)
-        subtitle = _text("SECURE BROWSER ACCESS", 11, _TEXT_DIM, True)
-        subtitle.setAlignment(Qt.AlignCenter)
-        form.addWidget(subtitle)
+        st = _lbl("SECURE BROWSER ACCESS", 14, _DIM, True)
+        st.setAlignment(Qt.AlignCenter)
+        fm.addWidget(st)
 
-        form.addSpacing(20)
+        fm.addSpacing(28)
 
-        # ── Input fields ──
+        # Fields
         for label_text, secret in fields:
-            form.addWidget(_text(label_text.upper(), 11, "#a0bcd0", True))
-            form.addSpacing(4)
+            fm.addWidget(_lbl(label_text.upper(), 15, "#a0bcd0", True))
+            fm.addSpacing(6)
 
             editor = QLineEdit()
-            editor.setPlaceholderText("Enter " + label_text.lower())
+            # Lock icon prefix via placeholder with lock symbol
+            editor.setPlaceholderText("\U0001f512 Enter " + label_text.lower())
             editor.returnPressed.connect(self.accept)
             self.inputs[label_text] = editor
 
             if secret:
                 editor.setEchoMode(QLineEdit.Password)
-                field_row = QHBoxLayout()
-                field_row.setSpacing(8)
-                field_row.addWidget(editor, 1)
-                vis_btn = QPushButton("Show")
-                vis_btn.setObjectName("passwordVisibility")
-                vis_btn.setCheckable(True)
-                vis_btn.setCursor(Qt.PointingHandCursor)
-                vis_btn.setAccessibleName("Show " + label_text.lower())
-                vis_btn.toggled.connect(
-                    lambda vis, f=editor, b=vis_btn, n=label_text:
-                    self._set_password_visibility(f, b, n, vis))
-                field_row.addWidget(vis_btn)
-                form.addLayout(field_row)
+                fr = QHBoxLayout(); fr.setSpacing(10)
+                fr.addWidget(editor, 1)
+                vb = QPushButton("Show")
+                vb.setObjectName("vis")
+                vb.setCheckable(True)
+                vb.setCursor(Qt.PointingHandCursor)
+                vb.setAccessibleName("Show " + label_text.lower())
+                vb.toggled.connect(
+                    lambda v, f=editor, b=vb, n=label_text:
+                    self._set_password_visibility(f, b, n, v))
+                fr.addWidget(vb)
+                fm.addLayout(fr)
             else:
-                form.addWidget(editor)
-            form.addSpacing(6)
+                fm.addWidget(editor)
+            fm.addSpacing(10)
 
-        form.addSpacing(10)
+        fm.addSpacing(16)
 
-        # Submit
-        submit_label = ("Create Credentials" if is_setup
-                        else "Login to Universe  →")
-        submit = QPushButton(submit_label)
-        submit.setObjectName("loginSubmit")
-        submit.setMinimumHeight(52)
-        submit.setCursor(Qt.PointingHandCursor)
-        submit.clicked.connect(self.accept)
-        form.addWidget(submit)
+        # Submit button (bigger)
+        sub = QPushButton(
+            "Create Credentials" if is_setup else "Login to Universe  →")
+        sub.setObjectName("submit")
+        sub.setMinimumHeight(62)
+        sub.setCursor(Qt.PointingHandCursor)
+        sub.clicked.connect(self.accept)
+        fm.addWidget(sub)
 
-        # Links row
+        # Links
         if is_login:
-            form.addSpacing(6)
-            links_row = QHBoxLayout()
-            links_row.addStretch()
+            fm.addSpacing(10)
+            lrow = QHBoxLayout()
+            lrow.addStretch()
 
-            recovery = QPushButton("Reset preview access")
-            recovery.setObjectName("linkBtn")
-            recovery.setCursor(Qt.PointingHandCursor)
-            recovery.clicked.connect(lambda: self.done(2))
-            links_row.addWidget(recovery)
+            forgot = QPushButton("Forgot both passwords?")
+            forgot.setObjectName("link")
+            forgot.setCursor(Qt.PointingHandCursor)
+            forgot.setEnabled(False)  # placeholder until recovery flow
+            lrow.addWidget(forgot)
 
-            links_row.addStretch()
-            form.addLayout(links_row)
+            sep_lbl = _lbl("|", 14, "#3a5a70")
+            sep_lbl.setFixedWidth(24)
+            sep_lbl.setAlignment(Qt.AlignCenter)
+            lrow.addWidget(sep_lbl)
 
-        # ── Trial licensing info (informational only) ──
-        form.addSpacing(12)
-        trial_sep = QFrame()
-        trial_sep.setFixedHeight(1)
-        trial_sep.setStyleSheet("background: rgba(0, 160, 220, 0.15);")
-        form.addWidget(trial_sep)
-        form.addSpacing(10)
+            reset = QPushButton("Reset preview access")
+            reset.setObjectName("link")
+            reset.setCursor(Qt.PointingHandCursor)
+            reset.clicked.connect(lambda: self.done(2))
+            lrow.addWidget(reset)
 
-        trial_row = QHBoxLayout()
-        trial_row.setSpacing(12)
-        info_icon = _text("ⓘ", 16, _ACCENT)
-        info_icon.setFixedWidth(22)
-        trial_row.addWidget(info_icon, 0, Qt.AlignTop)
-        trial_col = QVBoxLayout()
-        trial_col.setSpacing(3)
-        trial_col.addWidget(_text(
+            lrow.addStretch()
+            fm.addLayout(lrow)
+
+        # Trial licensing info
+        fm.addSpacing(16)
+        tsep = QFrame(); tsep.setFixedHeight(1)
+        tsep.setStyleSheet("background:rgba(0,160,220,0.20);")
+        fm.addWidget(tsep)
+        fm.addSpacing(14)
+
+        tr = QHBoxLayout(); tr.setSpacing(16)
+        ii = _lbl("ⓘ", 20, _CYAN); ii.setFixedWidth(28)
+        tr.addWidget(ii, 0, Qt.AlignTop)
+        tc = QVBoxLayout(); tc.setSpacing(4)
+        tc.addWidget(_lbl(
             "TRIAL LICENSING  •  24h / 72h / custom hours",
-            11, "#c0d8ed", True))
-        trial_col.addWidget(_text(
+            13, "#c8dced", True))
+        tc.addWidget(_lbl(
             "License activation and server recovery will appear\n"
             "after their secure services are implemented.",
-            10, "#607890"))
-        trial_row.addLayout(trial_col, 1)
-        form.addLayout(trial_row)
+            12, "#5a7a90"))
+        tr.addLayout(tc, 1)
+        fm.addLayout(tr)
 
-        # Card footer
-        form.addSpacing(10)
-        footer = _text(
+        # Footer
+        fm.addSpacing(14)
+        foot = _lbl(
             "Admin Controlled  •  Session Control  •  Profile Isolation",
-            10, "#4a6478")
-        footer.setAlignment(Qt.AlignCenter)
-        form.addWidget(footer)
+            12, "#4a6478")
+        foot.setAlignment(Qt.AlignCenter)
+        fm.addWidget(foot)
 
-        right_col.addWidget(card, 0, Qt.AlignHCenter)
-        right_col.addStretch(1)
-        shell.addLayout(right_col, 52)
+        rc.addWidget(card, 0, Qt.AlignHCenter)
+        rc.addStretch(1)
+        shell.addLayout(rc, 56)
 
-        # Final layout
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(bg)
 
     def showEvent(self, event):
-        """Use the native Windows dark caption bar via DWM."""
         super().showEvent(event)
         if sys.platform != "win32":
             return
         try:
             import ctypes
             hwnd = int(self.winId())
-            value = ctypes.c_int(1)
+            v = ctypes.c_int(1)
             dwm = ctypes.windll.dwmapi.DwmSetWindowAttribute
-            result = dwm(hwnd, 20, ctypes.byref(value), ctypes.sizeof(value))
-            if result != 0:
-                dwm(hwnd, 19, ctypes.byref(value), ctypes.sizeof(value))
+            if dwm(hwnd, 20, ctypes.byref(v), ctypes.sizeof(v)) != 0:
+                dwm(hwnd, 19, ctypes.byref(v), ctypes.sizeof(v))
         except (AttributeError, OSError, ValueError):
             return
 
     @staticmethod
-    def _set_password_visibility(
-        editor: QLineEdit, button: QPushButton, label: str, visible: bool
-    ) -> None:
-        editor.setEchoMode(
-            QLineEdit.Normal if visible else QLineEdit.Password)
+    def _set_password_visibility(editor, button, label, visible):
+        editor.setEchoMode(QLineEdit.Normal if visible else QLineEdit.Password)
         button.setText("Hide" if visible else "Show")
-        button.setAccessibleName(
-            ("Hide " if visible else "Show ") + label.lower())
+        button.setAccessibleName(("Hide " if visible else "Show ") + label.lower())
 
     def values(self):
-        return {key: editor.text() for key, editor in self.inputs.items()}
+        return {k: e.text() for k, e in self.inputs.items()}
