@@ -307,4 +307,9 @@ def get_home_page_url() -> str:
     cache_dir.mkdir(parents=True, exist_ok=True)
     home_file = cache_dir / "home.html"
     home_file.write_text(generate_home_html(), encoding="utf-8")
-    return home_file.as_uri()
+    # Path.as_uri() requires Python 3.13+; fall back for older versions.
+    if hasattr(home_file, "as_uri"):
+        return home_file.as_uri()
+    # Manual file:// URI construction (works on Windows and Linux)
+    import urllib.parse
+    return "file:///" + urllib.parse.quote(str(home_file).replace("\\", "/"), safe="/:@")
