@@ -282,34 +282,28 @@ class BrandedLoginDialog(QDialog):
         left = QVBoxLayout()
         left.setSpacing(4)
 
-        # ── DS Logo image ──
+        # ── DS Logo image (includes "DevSeaTech" text) ──
         logo_lbl = QLabel()
         if _LOGO_PATH.exists():
             pix = QPixmap(str(_LOGO_PATH))
-            logo_lbl.setPixmap(pix.scaledToHeight(140, Qt.SmoothTransformation))
+            # Scale to good height — logo already contains "DevSeaTech" text
+            logo_lbl.setPixmap(pix.scaledToHeight(180, Qt.SmoothTransformation))
         else:
             # Fallback: text logo
             lf = QFont(); lf.setPixelSize(64); lf.setBold(True)
             logo_lbl.setFont(lf)
-            logo_lbl.setText("DS")
+            logo_lbl.setText("DevSeaTech")
         logo_lbl.setStyleSheet("background:transparent;border:0;")
         left.addWidget(logo_lbl)
 
-        # "DevSeaTech" text under logo
-        logo_text = QLabel("DevSeaTech")
-        ltf = QFont(); ltf.setPixelSize(42); ltf.setBold(True)
-        logo_text.setFont(ltf)
-        logo_text.setStyleSheet("background:transparent;border:0;color:#ffffff;")
-        left.addWidget(logo_text)
-
-        # "Universe" in cyan
+        # "Universe" in cyan below the logo
         uni = QLabel("Universe")
-        uf = QFont(); uf.setPixelSize(28); uf.setBold(True)
+        uf = QFont(); uf.setPixelSize(32); uf.setBold(True)
         uni.setFont(uf)
         uni.setStyleSheet(f"background:transparent;border:0;color:{_CYAN};")
         left.addWidget(uni)
 
-        left.addSpacing(10)
+        left.addSpacing(8)
 
         # Tagline
         tag = QLabel("Your All-in-One Secure Browser Platform")
