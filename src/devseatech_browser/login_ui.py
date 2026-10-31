@@ -523,11 +523,13 @@ class BrandedLoginDialog(QDialog):
         tab_master = QPushButton("\U0001f512  Master Login")
         tab_master.setObjectName("tab_active")
         tab_master.setCursor(Qt.PointingHandCursor)
+        tab_master.setFocusPolicy(Qt.NoFocus)  # visual only
         tab_row.addWidget(tab_master, 1)
 
         tab_admin = QPushButton("\U0001f464  Administrator")
         tab_admin.setObjectName("tab_inactive")
         tab_admin.setCursor(Qt.PointingHandCursor)
+        tab_admin.setFocusPolicy(Qt.NoFocus)  # visual only
         tab_row.addWidget(tab_admin, 1)
 
         fm.addLayout(tab_row)
@@ -620,8 +622,8 @@ class BrandedLoginDialog(QDialog):
         cards_row.addWidget(c2, 1)
         cards_row.addWidget(c3, 1)
 
-        # Wire reset card click
-        c2.mousePressEvent = lambda _: self.done(2)
+        # Action cards are visual placeholders — no click wiring
+        # (trial/license activation require server-side services)
 
         fm.addLayout(cards_row)
 
