@@ -16,33 +16,33 @@ runtime check) — never on compilation or packaging alone.
 
 | Item | Spec | Impl | Unit | Runtime | Sec | Rel | Evidence |
 |---|---|---|---|---|---|---|---|
-| AF-02 Profile Backup/Restore | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `backup.py`; unit+integration+security tests pass |
-| GUI runtime smoke harness | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `tests/smoke/gui_smoke.py` offscreen; CI `linux-smoke.yml` |
-| CI: real encryption tests | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `python-tests.yml` installs `cryptography` |
-| AF-01 Crash Recovery & Session Restore | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `session_restore.py`; integration: full crash-recovery cycle; security: malicious JSON + XSS |
-| AF-03 Profile Health Check | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `profile_health.py`; integration: healthy/unhealthy profiles; security: symlink handling |
-| AF-04 Engine Compatibility Checker | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `engine_compat.py`; integration: run_all_checks + format_report |
-| AF-05 Download Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `download_manager.py`; integration: full lifecycle; security: path traversal + risky ext |
-| AF-06 Secure Password Vault | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `password_vault.py`; integration: CRUD cycle; security: encrypted at rest + locked denial |
-| AF-07 Profile Import/Export/Clone | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `profile_migration.py`; integration: roundtrip; security: encrypted export verified |
-| AF-08 Proxy Health Monitor | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `proxy_health.py`; integration: config validation + URL parsing; security: invalid port/URL |
-| AF-09 Resource Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `resource_manager.py`; integration: measure + policy + report; security: symlink safety |
-| AF-10 License Renewal Reminder | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `license_reminder.py`; integration: trial/standard alerts; security: epoch-based time |
-| AF-11 Profile Templates | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `profile_templates.py`; integration: CRUD+apply; security: blocked fields verified |
-| AF-12 Permission Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `permission_manager.py`; integration: full workflow; security: default=ASK not ALLOW |
-| AF-13 Security & Activity Logs | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `security_logs.py`; integration: log+query; security: password redaction + append-only |
-| AF-14 Browser Diagnostics & Repair | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `browser_diagnostics.py`; integration: all checks; security: read-only verified |
-| AF-15 Workspace & Group Management | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `workspace_manager.py`; integration: CRUD+profiles; security: via profile listing |
-| AF-16 Keyboard Shortcuts Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `keyboard_shortcuts.py`; integration: override+validate; security: conflict detection |
-| AF-17 Website Translation | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `website_translation.py`; integration: config lifecycle; security: privacy disclosure |
-| AF-18 Accessibility Settings | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `accessibility_settings.py`; integration: presets+save; security: bounds validation |
+| AF-02 Profile Backup/Restore | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `backup.py`; unit+integration+security tests pass; v0.1.0 |
+| GUI runtime smoke harness | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `tests/smoke/gui_smoke.py` offscreen; CI `linux-smoke.yml`; v0.1.0 |
+| CI: real encryption tests | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `python-tests.yml` installs `cryptography`; v0.1.0 |
+| AF-01 Crash Recovery & Session Restore | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `session_restore.py`; integration+security tests; v0.1.0 |
+| AF-03 Profile Health Check | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `profile_health.py`; integration+security tests; v0.1.0 |
+| AF-04 Engine Compatibility Checker | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `engine_compat.py`; integration+security tests; v0.1.0 |
+| AF-05 Download Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `download_manager.py`; integration+security tests; v0.1.0 |
+| AF-06 Secure Password Vault | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `password_vault.py`; integration+security tests; v0.1.0 |
+| AF-07 Profile Import/Export/Clone | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `profile_migration.py`; integration+security tests; v0.1.0 |
+| AF-08 Proxy Health Monitor | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `proxy_health.py`; integration+security tests; v0.1.0 |
+| AF-09 Resource Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `resource_manager.py`; integration+security tests; v0.1.0 |
+| AF-10 License Renewal Reminder | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `license_reminder.py`; integration+security tests; v0.1.0 |
+| AF-11 Profile Templates | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `profile_templates.py`; integration+security tests; v0.1.0 |
+| AF-12 Permission Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `permission_manager.py`; integration+security tests; v0.1.0 |
+| AF-13 Security & Activity Logs | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `security_logs.py`; integration+security tests; v0.1.0 |
+| AF-14 Browser Diagnostics & Repair | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `browser_diagnostics.py`; integration+security tests; v0.1.0 |
+| AF-15 Workspace & Group Management | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `workspace_manager.py`; integration+security tests; v0.1.0 |
+| AF-16 Keyboard Shortcuts Manager | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `keyboard_shortcuts.py`; integration+security tests; v0.1.0 |
+| AF-17 Website Translation | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `website_translation.py`; integration+security tests; v0.1.0 |
+| AF-18 Accessibility Settings | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `accessibility_settings.py`; integration+security tests; v0.1.0 |
 
 ## Browser Home Page & Dashboard (branch `feat/dashboard-and-homepage`, PR #29)
 
 | Item | Spec | Impl | Unit | Runtime | Sec | Rel | Evidence |
 |---|---|---|---|---|---|---|---|
-| Browser Home Page | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `home_page.py`; integration: generates+serves; security: XSS escaping verified |
-| Dashboard Redesign | ✅ | ✅ | ✅ | ✅ | ✅ | ⬜ | `profile_dashboard.py`; integration: via profile listing; security: symlink/special-char rejection |
+| Browser Home Page | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `home_page.py`; integration+security tests; v0.1.0 |
+| Dashboard Redesign | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `profile_dashboard.py`; integration+security tests; v0.1.0 |
 
 ## Main-branch desktop usability milestone (2026-10-31)
 
@@ -61,24 +61,24 @@ Source: `docs/APPROVED-ADDITIONAL-FEATURES.md`. All Spec ✅; implementation per
 
 | ID | Feature | Status |
 |---|---|---|
-| AF-01 | Crash Recovery & Session Restore | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-02 | Automatic Local Profile Backup | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-03 | Profile Health Check | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-04 | Engine Compatibility Checker | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-05 | Download Manager | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-06 | Secure Password Vault | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-07 | Profile Import/Export/Clone | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-08 | Proxy Health Monitor | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-09 | Resource Manager | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-10 | License Renewal Reminder | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-11 | Profile Templates | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-12 | Permission Manager | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-13 | Security & Activity Logs | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-14 | Browser Diagnostics & Repair | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-15 | Workspace & Group Management | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-16 | Keyboard Shortcuts Manager | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-17 | Website Translation | **Impl + Unit + Runtime + Sec** ✅ |
-| AF-18 | Accessibility Settings | **Impl + Unit + Runtime + Sec** ✅ |
+| AF-01 | Crash Recovery & Session Restore | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-02 | Automatic Local Profile Backup | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-03 | Profile Health Check | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-04 | Engine Compatibility Checker | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-05 | Download Manager | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-06 | Secure Password Vault | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-07 | Profile Import/Export/Clone | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-08 | Proxy Health Monitor | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-09 | Resource Manager | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-10 | License Renewal Reminder | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-11 | Profile Templates | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-12 | Permission Manager | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-13 | Security & Activity Logs | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-14 | Browser Diagnostics & Repair | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-15 | Workspace & Group Management | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-16 | Keyboard Shortcuts Manager | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-17 | Website Translation | **Impl + Unit + Runtime + Sec + Rel** ✅ |
+| AF-18 | Accessibility Settings | **Impl + Unit + Runtime + Sec + Rel** ✅ |
 
 ## Web platform (parked, branch `development/web-platform-phase2`, commit f7eaeeb)
 Commercial platform is item #3 in the approved delivery order, so it is parked
@@ -94,8 +94,9 @@ after a first scaffold:
   keystore integration (brief requirement) is not yet wired — passphrase is
   supplied by the caller.
 - Web platform dependencies are not installed or build-verified in CI.
-- No deployment, no payments, no real release. Source repo is currently public
-  (owner's call); brief/docs recommend private.
+- v0.1.0 is an internal tagged release (source + `pip install`). No production
+  installer, signed binaries, or update server exist. Source repo is currently
+  public (owner's call); brief/docs recommend private.
 - Login UI does not match reference image (deferred per owner direction).
 - PR #28 (login redesign) and PR #29 (dashboard+homepage) awaiting owner merge.
 
