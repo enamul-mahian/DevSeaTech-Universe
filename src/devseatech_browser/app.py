@@ -23,6 +23,7 @@ from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from devseatech_browser.login_ui import BrandedLoginDialog
 from devseatech_browser.profile_dashboard import ProfileDashboard
+from devseatech_browser.home_page import get_home_page_url
 from devseatech_browser.recovery import archive_preview_auth
 from devseatech_browser.session_restore import (
     TabEntry, save_session, mark_clean, load_session, SAVE_INTERVAL_MS,
@@ -174,6 +175,8 @@ class Browser(QMainWindow):
         forward.triggered.connect(lambda: self.current_action("forward"))
         reload_action = toolbar.addAction("Reload")
         reload_action.triggered.connect(lambda: self.current_action("reload"))
+        home_action = toolbar.addAction("Home")
+        home_action.triggered.connect(self.go_home)
         self.address = QLineEdit()
         self.address.setPlaceholderText("Enter a website URL")
         self.address.returnPressed.connect(self.navigate)
@@ -270,7 +273,7 @@ class Browser(QMainWindow):
         self.profiles[name] = profile
         return profile
 
-    def add_tab(self, profile_name: str, url: str = "https://www.google.com"):
+    def add_tab(self, profile_name: str, url: str = ""):
         view = QWebEngineView(self)
         page = QWebEnginePage(self.profile_for(profile_name), view)
         view.setPage(page)
@@ -279,12 +282,20 @@ class Browser(QMainWindow):
             lambda title, v=view, p=profile_name: self.set_tab_title(v, p, title))
         view.urlChanged.connect(lambda _url, v=view: self.update_view_address(v))
         self.tabs.setCurrentIndex(index)
+        if not url:
+            url = get_home_page_url()
         view.setUrl(QUrl(url))
 
     def set_tab_title(self, view, profile, title):
         index = self.tabs.indexOf(view)
         if index >= 0:
             self.tabs.setTabText(index, f"{profile}: {title[:30]}")
+
+    def go_home(self):
+        """Navigate current tab to the home page."""
+        view = self.tabs.currentWidget()
+        if view:
+            view.setUrl(QUrl(get_home_page_url()))
 
     def current_action(self, method):
         view = self.tabs.currentWidget()
