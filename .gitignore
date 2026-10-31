@@ -5,6 +5,7 @@ venv/
 dist/
 build/
 *.spec
+!packaging/*.spec
 .pytest_cache/
 .env
 *.db

@@ -9,6 +9,7 @@ import {
 import { licenseRoutes } from "./routes/licenses.js";
 import { deviceRoutes } from "./routes/devices.js";
 import { planRoutes } from "./routes/plans.js";
+import { paymentRoutes } from "./routes/payments.js";
 
 export const app = new Hono();
 
@@ -22,8 +23,10 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://localhost:3001",
+      "http://localhost:3002",
       process.env.WEB_ORIGIN ?? "",
       process.env.ADMIN_ORIGIN ?? "",
+      process.env.PORTAL_ORIGIN ?? "",
     ].filter(Boolean),
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
@@ -49,6 +52,7 @@ app.get("/health", (c) => {
 app.route("/api/licenses", licenseRoutes);
 app.route("/api/devices", deviceRoutes);
 app.route("/api/plans", planRoutes);
+app.route("/api/payments", paymentRoutes);
 
 // ---------------------------------------------------------------------------
 // 404
