@@ -37,6 +37,13 @@ runtime check) — never on compilation or packaging alone.
 | AF-17 Website Translation | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/website_translation.py`; 7 tests in `tests/test_website_translation.py`; privacy disclosure, site exclusion, config persistence, UI stays English |
 | AF-18 Accessibility Settings | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/accessibility_settings.py`; 9 tests in `tests/test_accessibility_settings.py`; presets, font-scale validation, per-profile persistence |
 
+## Browser Home Page & Dashboard (branch `feat/dashboard-and-homepage`, PR #29)
+
+| Item | Spec | Impl | Unit | Runtime | Sec | Rel | Evidence |
+|---|---|---|---|---|---|---|---|
+| Browser Home Page | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/home_page.py`; 10 tests in `tests/test_home_page.py`; DS logo, Google search, speed dial tiles, persistence |
+| Dashboard Redesign | ✅ | ✅ | ✅ | n/a | ⬜ | ⬜ | `src/devseatech_browser/profile_dashboard.py`; sidebar nav, stats cards, improved table; 3 existing tests pass |
+
 ## Main-branch desktop usability milestone (2026-10-31)
 
 | Item | Spec | Impl | Unit | Runtime | Sec | Rel | Evidence |
