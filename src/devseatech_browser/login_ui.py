@@ -279,6 +279,7 @@ class BrandedLoginDialog(QDialog):
         shell = QHBoxLayout(bg)
         shell.setContentsMargins(48, 32, 42, 24)
         shell.setSpacing(36)
+        self._bg = bg  # prevent GC and allow resize
 
         # ═══════════════════════════════════════
         #  LEFT — Logo + tagline + features (2-col) + contact + quote
@@ -454,14 +455,14 @@ class BrandedLoginDialog(QDialog):
                 font-size:14px; font-weight:600; padding:12px 20px;
             }}
             QPushButton#tab_inactive:hover {{ color:#c0e0f0; }}
-            QPushButton#vis {{
+            QPushButton#passwordVisibility {{
                 background:rgba(0,160,220,0.08);
                 border:1.5px solid rgba(0,160,220,0.35);
                 border-radius:8px; color:{_CYAN};
                 font-size:14px; font-weight:600;
                 padding:15px 18px;
             }}
-            QPushButton#vis:hover {{ background:rgba(0,160,220,0.18); }}
+            QPushButton#passwordVisibility:hover {{ background:rgba(0,160,220,0.18); }}
             QPushButton#link {{
                 background:transparent; color:{_CYAN};
                 font-size:13px; border:none; padding:4px;
@@ -544,11 +545,12 @@ class BrandedLoginDialog(QDialog):
                 editor.setEchoMode(QLineEdit.Password)
                 fr = QHBoxLayout(); fr.setSpacing(8)
                 fr.addWidget(editor, 1)
-                vb = QPushButton("Show")
-                vb.setObjectName("vis")
+                vb = QPushButton("\U0001f441  Show")
+                vb.setObjectName("passwordVisibility")
                 vb.setCheckable(True)
                 vb.setCursor(Qt.PointingHandCursor)
                 vb.setAccessibleName("Show " + label_text.lower())
+                vb.setToolTip("Toggle password visibility")
                 vb.toggled.connect(
                     lambda v, f=editor, b=vb, n=label_text:
                     self._set_password_visibility(f, b, n, v))
@@ -633,8 +635,22 @@ class BrandedLoginDialog(QDialog):
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(bg)
 
+        # Auto-focus the first input field for keyboard-first users.
+        first_input = next(iter(self.inputs.values()), None)
+        if first_input:
+            first_input.setFocus()
+
+    def resizeEvent(self, event):
+        """Scale background to fill the dialog on resize."""
+        super().resizeEvent(event)
+        if hasattr(self, "_bg"):
+            self._bg.setGeometry(self.rect())
+
     def showEvent(self, event):
         super().showEvent(event)
+        # Ensure background covers full area on first show.
+        if hasattr(self, "_bg"):
+            self._bg.setGeometry(self.rect())
         if sys.platform != "win32":
             return
         try:
@@ -647,10 +663,17 @@ class BrandedLoginDialog(QDialog):
         except (AttributeError, OSError, ValueError):
             return
 
+    def keyPressEvent(self, event):
+        """Allow Escape to close the dialog; Enter to accept."""
+        if event.key() == Qt.Key_Escape:
+            self.reject()
+        else:
+            super().keyPressEvent(event)
+
     @staticmethod
     def _set_password_visibility(editor, button, label, visible):
         editor.setEchoMode(QLineEdit.Normal if visible else QLineEdit.Password)
-        button.setText("Hide" if visible else "Show")
+        button.setText("\U0001f441  Hide" if visible else "\U0001f441  Show")
         button.setAccessibleName(("Hide " if visible else "Show ") + label.lower())
 
     def values(self):

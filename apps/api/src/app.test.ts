@@ -112,6 +112,91 @@ describe("POST /api/devices", () => {
   });
 });
 
+describe("GET /api/payments", () => {
+  it("lists seeded payments", async () => {
+    const res = await req("/api/payments");
+    expect(res.status).toBe(200);
+    const body = await json(res);
+    expect(body.ok).toBe(true);
+    expect(body.data.length).toBeGreaterThanOrEqual(1);
+    expect(body.data[0].gateway).toBe("stripe");
+    expect(body.data[0].isLive).toBe(false); // must be sandbox
+  });
+});
+
+describe("POST /api/payments/checkout", () => {
+  it("creates a checkout session in test mode", async () => {
+    const res = await req("/api/payments/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        planSlug: "standard-30d",
+        gateway: "stripe",
+        successUrl: "http://localhost:3002/payment/success",
+        cancelUrl: "http://localhost:3002/payment/cancel",
+      }),
+    });
+    expect(res.status).toBe(200);
+    const body = await json(res);
+    expect(body.ok).toBe(true);
+    expect(body.data.checkoutUrl).toContain("stripe.com/test");
+    expect(body.data.isLive).toBe(false); // must be test mode
+    expect(body.data.gateway).toBe("stripe");
+  });
+
+  it("creates SSLCommerz checkout session", async () => {
+    const res = await req("/api/payments/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        planSlug: "standard-30d",
+        gateway: "sslcommerz",
+        successUrl: "http://localhost:3002/payment/success",
+        cancelUrl: "http://localhost:3002/payment/cancel",
+      }),
+    });
+    expect(res.status).toBe(200);
+    const body = await json(res);
+    expect(body.ok).toBe(true);
+    expect(body.data.checkoutUrl).toContain("sslcommerz.com/test");
+    expect(body.data.isLive).toBe(false);
+  });
+
+  it("rejects invalid checkout request", async () => {
+    const res = await req("/api/payments/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bad: true }),
+    });
+    expect(res.status).toBe(400);
+    const body = await json(res);
+    expect(body.ok).toBe(false);
+  });
+});
+
+describe("POST /api/payments/webhook/:gateway", () => {
+  it("receives but does not trust unverified webhook", async () => {
+    const res = await req("/api/payments/webhook/stripe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "payment_intent.succeeded", id: "evt_test" }),
+    });
+    expect(res.status).toBe(200);
+    const body = await json(res);
+    expect(body.ok).toBe(true);
+    expect(body.data.verified).toBe(false); // unverified webhook
+  });
+
+  it("rejects unknown gateway", async () => {
+    const res = await req("/api/payments/webhook/unknown", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("404", () => {
   it("returns structured error for unknown routes", async () => {
     const res = await req("/api/nonexistent");

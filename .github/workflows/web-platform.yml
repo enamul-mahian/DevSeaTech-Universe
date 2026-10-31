@@ -1,0 +1,88 @@
+name: Web Platform CI
+
+on:
+  push:
+    branches: [main, "development/**"]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck contracts
+        run: pnpm --filter @devseatech/contracts typecheck
+
+      - name: Typecheck API
+        run: pnpm --filter @devseatech/api typecheck
+
+      - name: Typecheck web
+        run: pnpm --filter @devseatech/web typecheck
+
+      - name: Typecheck admin
+        run: pnpm --filter @devseatech/admin typecheck
+
+      - name: Typecheck portal
+        run: pnpm --filter @devseatech/portal typecheck
+
+      - name: Build web
+        run: pnpm --filter @devseatech/web build
+
+      - name: Build admin
+        run: pnpm --filter @devseatech/admin build
+
+      - name: Build portal
+        run: pnpm --filter @devseatech/portal build
+
+  api-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run API tests
+        run: pnpm --filter @devseatech/api test
