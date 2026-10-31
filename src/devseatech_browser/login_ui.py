@@ -62,6 +62,8 @@ class CosmicBackground(QWidget):
 
     def paintEvent(self, _):
         p = QPainter(self)
+        if not p.isActive():
+            return
         p.setRenderHint(QPainter.Antialiasing)
         w, h = max(1, self.width()), max(1, self.height())
         t = self.tick
@@ -273,6 +275,7 @@ class BrandedLoginDialog(QDialog):
         is_setup = title == "First-Time Setup"
 
         bg = CosmicBackground(self)
+        bg.setObjectName("galaxy")
         shell = QHBoxLayout(bg)
         shell.setContentsMargins(48, 32, 42, 24)
         shell.setSpacing(36)
