@@ -41,7 +41,7 @@ def fail(message: str) -> "NoReturn":  # type: ignore[name-defined]
 def main() -> int:
     try:
         from PySide6.QtWidgets import (
-            QApplication, QDialog, QLineEdit, QPushButton,
+            QApplication, QDialog, QLineEdit, QPushButton, QWidget,
         )
         from PySide6.QtCore import QTimer
     except Exception as exc:  # noqa: BLE001
@@ -55,6 +55,16 @@ def main() -> int:
 
         dialog = BrandedLoginDialog("Master Login", [("Master password", True)])
         assert dialog.inputs, "login dialog has no input fields"
+        # Force the actual Qt paint path; construction alone missed a crash.
+        dialog.show()
+        app.processEvents()
+        background = dialog.findChild(QWidget, "galaxy")
+        assert background is not None, "login canvas missing"
+        from PySide6.QtGui import QPixmap
+        image = QPixmap(background.size())
+        background.render(image)
+        assert not image.isNull(), "login canvas failed to render"
+        dialog.hide()
         password = dialog.inputs["Master password"]
         visibility = dialog.findChild(QPushButton, "passwordVisibility")
         assert visibility is not None, "password visibility control is missing"
