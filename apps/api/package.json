@@ -1,0 +1,26 @@
+{
+  "name": "@devseatech/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DevSeaTech Universe licensing and device management API.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@devseatech/contracts": "workspace:*",
+    "@hono/node-server": "1.13.7",
+    "hono": "4.6.16",
+    "zod": "3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.5",
+    "tsx": "4.19.2",
+    "typescript": "5.7.3",
+    "vitest": "2.1.8"
+  }
+}
