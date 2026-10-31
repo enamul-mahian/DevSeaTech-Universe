@@ -100,11 +100,11 @@ class CosmicBackground(QWidget):
                 ridge.append(QPointF(x, min(h * base, peak)))
             ridge.append(QPointF(w, h))
             ridge.append(QPointF(0, h))
-            painter.setPen(Qt.NoPen)
-            painter.setBrush(QColor(fill))
-            painter.drawPolygon(ridge)
-        painter.setPen(QPen(QColor(24, 163, 255, 64), 2))
-        painter.drawLine(0, int(h * .85), w, int(h * .89))
+            p.setPen(Qt.NoPen)
+            p.setBrush(QColor(fill))
+            p.drawPolygon(ridge)
+        p.setPen(QPen(QColor(24, 163, 255, 64), 2))
+        p.drawLine(0, int(h * .85), w, int(h * .89))
 
         # Stars
         for s in self._stars:
