@@ -85,7 +85,7 @@ def main() -> int:
             empty_dashboard = ProfileDashboard(profiles_dir, lambda _name: None)
             assert empty_dashboard.table.rowCount() == 0, "empty store is not empty"
             assert empty_dashboard.empty_state.text() == (
-                "No profiles yet. Create a profile to get started."
+                "No profiles yet. Click '+ New Profile' to get started."
             ), "empty profile store has no guidance"
             empty_dashboard.close()
 
